@@ -88,7 +88,7 @@
             // Example: if images are named sequentially like image1.png, image2.png, ..., imageN.png
             // Check for a reasonable number of images
             for (let i = 1; i <= 10; i++) { // Adjust this number based on expected number of images
-                const imgPath = `images/${folderName}/image${i}.png`;
+                const imgPath = `images/${folderName}/agent${i}.png`;
                 const img = new Image();
                 img.src = imgPath;
                 img.alt = `Agents: ${agents}, Density: ${density}, Image ${i}`;
