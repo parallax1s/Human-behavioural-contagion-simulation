@@ -16,23 +16,42 @@
         input[type="number"], input[type="submit"] {
             margin-bottom: 20px;
         }
-        .images {
+        .carousel {
             display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
+            flex-direction: column;
+            align-items: center;
         }
-        .images img {
-            width: 300px;
-            height: auto;
+        .carousel img {
+            max-width: 100%;
+            max-height: 500px;
+        }
+        .carousel-controls {
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        .carousel-controls button {
+            padding: 5px 10px;
+        }
+        .agent-name {
+            margin-top: 10px;
+            font-weight: bold;
         }
         .notice {
             color: red;
             font-weight: bold;
         }
+        .description {
+            margin-top: 10px;
+            font-style: italic;
+            color: #555;
+        }
     </style>
 </head>
 <body>
     <h1>Agent Simulation</h1>
+    <div class="description">This tool allows you to simulate different scenarios by adjusting the number of agents and density. Select your parameters below to see the results.</div>
     <form id="simulation-form">
         <label for="agents">Number of Agents:</label>
         <input type="number" id="agents" name="agents" min="5" max="25" step="1" required>
@@ -44,7 +63,16 @@
     </form>
 
     <div id="notice" class="notice"></div>
-    <div class="images" id="images-container"></div>
+
+    <div class="carousel" id="carousel" style="display: none;">
+        <img id="carousel-image" src="" alt="">
+        <div class="carousel-controls">
+            <button id="prev-btn">Previous</button>
+            <span id="image-counter"></span>
+            <button id="next-btn">Next</button>
+        </div>
+        <div id="agent-name" class="agent-name"></div>
+    </div>
 
     <script>
         let allowedCombinations = {};
@@ -67,16 +95,24 @@
             const density = parseFloat(document.getElementById('density').value).toFixed(2);
 
             const notice = document.getElementById('notice');
-            const imagesContainer = document.getElementById('images-container');
-            imagesContainer.innerHTML = '';
+            const carousel = document.getElementById('carousel');
+            const carouselImage = document.getElementById('carousel-image');
+            const agentName = document.getElementById('agent-name');
+            const imageCounter = document.getElementById('image-counter');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            let currentImageIndex = 0;
+            let imageFiles = [];
 
             if (!allowedCombinations[agents]) {
                 notice.textContent = `Invalid number of agents. Allowed values: ${Object.keys(allowedCombinations).join(', ')}.`;
+                carousel.style.display = 'none';
                 return;
             }
 
             if (!allowedCombinations[agents].includes(density)) {
                 notice.textContent = `Invalid density value for ${agents} agents. Allowed values: ${allowedCombinations[agents].join(', ')}.`;
+                carousel.style.display = 'none';
                 return;
             }
 
@@ -85,21 +121,57 @@
             // Generate the folder name based on the input
             const folderName = `agents_${agents}_dens_${density}`;
 
-            // Example: if images are named sequentially like image1.png, image2.png, ..., imageN.png
-            // Check for a reasonable number of images
+            // Assuming images are named sequentially like image1.png, image2.png, ..., imageN.png
+            // We will check for a reasonable number of images
+            imageFiles = [];
             for (let i = 1; i <= 10; i++) { // Adjust this number based on expected number of images
-                const imgPath = `images/${folderName}/agent${i}.png`;
+                const imgPath = `images/${folderName}/image${i}.png`;
+
                 const img = new Image();
                 img.src = imgPath;
                 img.alt = `Agents: ${agents}, Density: ${density}, Image ${i}`;
 
-                // Check if the image exists by adding an error event listener
-                img.onerror = function() {
-                    this.style.display = 'none';
+                // Check if the image exists
+                img.onload = function() {
+                    imageFiles.push({
+                        src: imgPath,
+                        name: img.alt
+                    });
+
+                    if (imageFiles.length === 1) {
+                        // Display the first image immediately
+                        displayImage(0);
+                    }
                 };
 
-                imagesContainer.appendChild(img);
+                img.onerror = function() {
+                    // Stop if an image does not exist
+                    if (i === 1 && imageFiles.length === 0) {
+                        notice.textContent = 'No images found for the selected combination.';
+                        carousel.style.display = 'none';
+                    }
+                };
             }
+
+            function displayImage(index) {
+                carouselImage.src = imageFiles[index].src;
+                agentName.textContent = imageFiles[index].name;
+                imageCounter.textContent = `Image ${index + 1} of ${imageFiles.length}`;
+                currentImageIndex = index;
+                carousel.style.display = 'block';
+            }
+
+            prevBtn.addEventListener('click', function() {
+                if (currentImageIndex > 0) {
+                    displayImage(currentImageIndex - 1);
+                }
+            });
+
+            nextBtn.addEventListener('click', function() {
+                if (currentImageIndex < imageFiles.length - 1) {
+                    displayImage(currentImageIndex + 1);
+                }
+            });
         });
     </script>
 </body>
