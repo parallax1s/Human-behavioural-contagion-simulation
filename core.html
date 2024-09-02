@@ -19,10 +19,15 @@
         .images {
             display: flex;
             gap: 20px;
+            flex-wrap: wrap;
         }
         .images img {
             width: 300px;
             height: auto;
+        }
+        .notice {
+            color: red;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -30,7 +35,7 @@
     <h1>Agent Simulation</h1>
     <form id="simulation-form">
         <label for="agents">Number of Agents:</label>
-        <input type="number" id="agents" name="agents" min="5" max="25" required>
+        <input type="number" id="agents" name="agents" min="5" max="25" step="1" required>
 
         <label for="density">Density:</label>
         <input type="number" id="density" name="density" step="0.01" min="0.80" max="1.20" required>
@@ -38,22 +43,52 @@
         <input type="submit" value="Generate">
     </form>
 
+    <div id="notice" class="notice"></div>
     <div class="images" id="images-container"></div>
 
     <script>
+        let allowedCombinations = {};
+
+        fetch('combinations.json')
+            .then(response => response.json())
+            .then(data => {
+                allowedCombinations = data;
+
+                // Set initial form values to the first valid option
+                const initialAgents = Object.keys(allowedCombinations)[0];
+                document.getElementById('agents').value = initialAgents;
+                document.getElementById('density').value = allowedCombinations[initialAgents][0];
+            });
+
         document.getElementById('simulation-form').addEventListener('submit', function(e) {
             e.preventDefault();
 
             const agents = document.getElementById('agents').value;
             const density = parseFloat(document.getElementById('density').value).toFixed(2);
 
+            const notice = document.getElementById('notice');
             const imagesContainer = document.getElementById('images-container');
             imagesContainer.innerHTML = '';
 
-            // Generate file names based on the input
+            if (!allowedCombinations[agents]) {
+                notice.textContent = `Invalid number of agents. Allowed values: ${Object.keys(allowedCombinations).join(', ')}.`;
+                return;
+            }
+
+            if (!allowedCombinations[agents].includes(density)) {
+                notice.textContent = `Invalid density value for ${agents} agents. Allowed values: ${allowedCombinations[agents].join(', ')}.`;
+                return;
+            }
+
+            notice.textContent = '';
+
+            // Generate the folder name based on the input
+            const folderName = `agents_${agents}_dens_${density}`;
+
+            // Assuming images are named as img1.jpg, img2.jpg, img3.jpg, etc.
             for (let i = 1; i <= 3; i++) {
                 const img = document.createElement('img');
-                img.src = `images/agents_${agents}_density_${density}_img${i}.jpg`;
+                img.src = `images/${folderName}/img${i}.jpg`;
                 img.alt = `Agents: ${agents}, Density: ${density}, Image ${i}`;
                 imagesContainer.appendChild(img);
             }
