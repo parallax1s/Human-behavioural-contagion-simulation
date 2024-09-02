@@ -1,0 +1,423 @@
+graph [
+  directed 1
+  node [
+    id 0
+    label "agent1"
+  ]
+  node [
+    id 1
+    label "agent6"
+  ]
+  node [
+    id 2
+    label "agent3"
+  ]
+  node [
+    id 3
+    label "agent4"
+  ]
+  node [
+    id 4
+    label "agent8"
+  ]
+  node [
+    id 5
+    label "agent12"
+  ]
+  node [
+    id 6
+    label "agent13"
+  ]
+  node [
+    id 7
+    label "agent14"
+  ]
+  node [
+    id 8
+    label "agent15"
+  ]
+  node [
+    id 9
+    label "agent7"
+  ]
+  node [
+    id 10
+    label "agent5"
+  ]
+  node [
+    id 11
+    label "agent2"
+  ]
+  node [
+    id 12
+    label "agent9"
+  ]
+  node [
+    id 13
+    label "agent10"
+  ]
+  node [
+    id 14
+    label "agent11"
+  ]
+  edge [
+    source 0
+    target 1
+    weight 348591
+  ]
+  edge [
+    source 0
+    target 8
+    weight 214558
+  ]
+  edge [
+    source 0
+    target 9
+    weight 94562
+  ]
+  edge [
+    source 0
+    target 10
+    weight 90547
+  ]
+  edge [
+    source 0
+    target 14
+    weight 291100
+  ]
+  edge [
+    source 0
+    target 11
+    weight 41635
+  ]
+  edge [
+    source 0
+    target 12
+    weight 26496
+  ]
+  edge [
+    source 1
+    target 8
+    weight 828017
+  ]
+  edge [
+    source 2
+    target 1
+    weight 4172
+  ]
+  edge [
+    source 2
+    target 7
+    weight 76353
+  ]
+  edge [
+    source 2
+    target 8
+    weight 69287
+  ]
+  edge [
+    source 2
+    target 9
+    weight 27053
+  ]
+  edge [
+    source 2
+    target 10
+    weight 79469
+  ]
+  edge [
+    source 2
+    target 5
+    weight 38230
+  ]
+  edge [
+    source 2
+    target 14
+    weight 130159
+  ]
+  edge [
+    source 2
+    target 13
+    weight 40379
+  ]
+  edge [
+    source 2
+    target 11
+    weight 25107
+  ]
+  edge [
+    source 2
+    target 12
+    weight 15758
+  ]
+  edge [
+    source 3
+    target 1
+    weight 8370
+  ]
+  edge [
+    source 3
+    target 7
+    weight 32609
+  ]
+  edge [
+    source 3
+    target 8
+    weight 38727
+  ]
+  edge [
+    source 3
+    target 10
+    weight 70320
+  ]
+  edge [
+    source 3
+    target 5
+    weight 21814
+  ]
+  edge [
+    source 3
+    target 14
+    weight 56304
+  ]
+  edge [
+    source 3
+    target 13
+    weight 19516
+  ]
+  edge [
+    source 3
+    target 11
+    weight 13692
+  ]
+  edge [
+    source 3
+    target 12
+    weight 7976
+  ]
+  edge [
+    source 4
+    target 1
+    weight 189631
+  ]
+  edge [
+    source 4
+    target 7
+    weight 176539
+  ]
+  edge [
+    source 4
+    target 8
+    weight 103690
+  ]
+  edge [
+    source 4
+    target 9
+    weight 95990
+  ]
+  edge [
+    source 4
+    target 10
+    weight 31402
+  ]
+  edge [
+    source 4
+    target 14
+    weight 109046
+  ]
+  edge [
+    source 4
+    target 13
+    weight 92991
+  ]
+  edge [
+    source 4
+    target 11
+    weight 64635
+  ]
+  edge [
+    source 4
+    target 12
+    weight 36960
+  ]
+  edge [
+    source 5
+    target 1
+    weight 26533
+  ]
+  edge [
+    source 5
+    target 7
+    weight 41749
+  ]
+  edge [
+    source 5
+    target 8
+    weight 17768
+  ]
+  edge [
+    source 5
+    target 9
+    weight 34333
+  ]
+  edge [
+    source 5
+    target 10
+    weight 2361
+  ]
+  edge [
+    source 5
+    target 3
+    weight 20311
+  ]
+  edge [
+    source 5
+    target 0
+    weight 34745
+  ]
+  edge [
+    source 5
+    target 2
+    weight 32611
+  ]
+  edge [
+    source 5
+    target 14
+    weight 14793
+  ]
+  edge [
+    source 5
+    target 13
+    weight 63312
+  ]
+  edge [
+    source 5
+    target 11
+    weight 87151
+  ]
+  edge [
+    source 5
+    target 12
+    weight 64705
+  ]
+  edge [
+    source 6
+    target 1
+    weight 60044
+  ]
+  edge [
+    source 6
+    target 7
+    weight 57956
+  ]
+  edge [
+    source 6
+    target 8
+    weight 42020
+  ]
+  edge [
+    source 6
+    target 9
+    weight 40165
+  ]
+  edge [
+    source 6
+    target 10
+    weight 2538
+  ]
+  edge [
+    source 6
+    target 3
+    weight 85269
+  ]
+  edge [
+    source 6
+    target 5
+    weight 166495
+  ]
+  edge [
+    source 6
+    target 0
+    weight 138171
+  ]
+  edge [
+    source 6
+    target 2
+    weight 189678
+  ]
+  edge [
+    source 6
+    target 14
+    weight 10942
+  ]
+  edge [
+    source 6
+    target 13
+    weight 43756
+  ]
+  edge [
+    source 6
+    target 11
+    weight 28119
+  ]
+  edge [
+    source 6
+    target 12
+    weight 19605
+  ]
+  edge [
+    source 6
+    target 4
+    weight 319684
+  ]
+  edge [
+    source 7
+    target 9
+    weight 803841
+  ]
+  edge [
+    source 10
+    target 5
+    weight 5771
+  ]
+  edge [
+    source 10
+    target 11
+    weight 17695
+  ]
+  edge [
+    source 10
+    target 12
+    weight 6810
+  ]
+  edge [
+    source 11
+    target 10
+    weight 12596
+  ]
+  edge [
+    source 11
+    target 3
+    weight 25361
+  ]
+  edge [
+    source 12
+    target 10
+    weight 7300
+  ]
+  edge [
+    source 12
+    target 3
+    weight 14394
+  ]
+  edge [
+    source 13
+    target 10
+    weight 21270
+  ]
+  edge [
+    source 14
+    target 12
+    weight 9309
+  ]
+]
