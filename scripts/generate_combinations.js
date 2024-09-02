@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const imagesDir = path.join(__dirname, '../src/images');
+const imagesDir = path.join(__dirname, '../docs/images');
 const outputFilePath = path.join(__dirname, '../docs/combinations.json');
 
 const combinations = {};
