@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Simulation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+        }
+        input[type="number"], input[type="submit"] {
+            margin-bottom: 20px;
+        }
+        .images {
+            display: flex;
+            gap: 20px;
+        }
+        .images img {
+            width: 300px;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Agent Simulation</h1>
+    <form id="simulation-form">
+        <label for="agents">Number of Agents:</label>
+        <input type="number" id="agents" name="agents" min="5" max="25" required>
+
+        <label for="density">Density:</label>
+        <input type="number" id="density" name="density" step="0.01" min="0.80" max="1.20" required>
+
+        <input type="submit" value="Generate">
+    </form>
+
+    <div class="images" id="images-container"></div>
+
+    <script>
+        document.getElementById('simulation-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const agents = document.getElementById('agents').value;
+            const density = parseFloat(document.getElementById('density').value).toFixed(2);
+
+            const imagesContainer = document.getElementById('images-container');
+            imagesContainer.innerHTML = '';
+
+            // Generate file names based on the input
+            for (let i = 1; i <= 3; i++) {
+                const img = document.createElement('img');
+                img.src = `images/agents_${agents}_density_${density}_img${i}.jpg`;
+                img.alt = `Agents: ${agents}, Density: ${density}, Image ${i}`;
+                imagesContainer.appendChild(img);
+            }
+        });
+    </script>
+</body>
+</html>
