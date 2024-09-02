@@ -85,11 +85,19 @@
             // Generate the folder name based on the input
             const folderName = `agents_${agents}_dens_${density}`;
 
-            // Assuming images are named as img1.jpg, img2.jpg, img3.jpg, etc.
-            for (let i = 1; i <= 3; i++) {
-                const img = document.createElement('img');
-                img.src = `images/${folderName}/img${i}.jpg`;
+            // Example: if images are named sequentially like image1.png, image2.png, ..., imageN.png
+            // Check for a reasonable number of images
+            for (let i = 1; i <= 10; i++) { // Adjust this number based on expected number of images
+                const imgPath = `images/${folderName}/image${i}.png`;
+                const img = new Image();
+                img.src = imgPath;
                 img.alt = `Agents: ${agents}, Density: ${density}, Image ${i}`;
+
+                // Check if the image exists by adding an error event listener
+                img.onerror = function() {
+                    this.style.display = 'none';
+                };
+
                 imagesContainer.appendChild(img);
             }
         });
