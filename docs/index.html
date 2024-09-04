@@ -16,6 +16,21 @@
         input[type="number"], input[type="submit"] {
             margin-bottom: 20px;
         }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ccc;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
         .carousel {
             display: flex;
             flex-direction: column;
@@ -52,6 +67,9 @@
 <body>
     <h1>Agent Simulation</h1>
     <div class="description">This tool allows you to simulate different scenarios by adjusting the number of agents and density. Select your parameters below to see the results.</div>
+
+    <div id="combinations-table-container"></div> <!-- Table container for allowed combinations -->
+
     <form id="simulation-form">
         <label for="agents">Number of Agents:</label>
         <input type="number" id="agents" name="agents" min="5" max="25" step="1" required>
@@ -77,16 +95,56 @@
     <script>
         let allowedCombinations = {};
 
+        // Load the combinations JSON file and display the table
         fetch('combinations.json')
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to load combinations.json');
+                }
+                return response.json();
+            })
             .then(data => {
                 allowedCombinations = data;
-
-                // Set initial form values to the first valid option
-                const initialAgents = Object.keys(allowedCombinations)[0];
-                document.getElementById('agents').value = initialAgents;
-                document.getElementById('density').value = allowedCombinations[initialAgents][0];
+                displayCombinationsTable();
+                setInitialFormValues();
+            })
+            .catch(error => {
+                document.getElementById('combinations-table-container').innerHTML = `<div class="notice">Error: ${error.message}</div>`;
             });
+
+        // Function to display the combinations table
+        function displayCombinationsTable() {
+            const container = document.getElementById('combinations-table-container');
+            const table = document.createElement('table');
+            const headerRow = document.createElement('tr');
+            const agentHeader = document.createElement('th');
+            agentHeader.textContent = 'Number of Agents';
+            const densityHeader = document.createElement('th');
+            densityHeader.textContent = 'Allowed Densities';
+            headerRow.appendChild(agentHeader);
+            headerRow.appendChild(densityHeader);
+            table.appendChild(headerRow);
+
+            for (const [agents, densities] of Object.entries(allowedCombinations)) {
+                const row = document.createElement('tr');
+                const agentCell = document.createElement('td');
+                agentCell.textContent = agents;
+                const densityCell = document.createElement('td');
+                densityCell.textContent = densities.join(', ');
+                row.appendChild(agentCell);
+                row.appendChild(densityCell);
+                table.appendChild(row);
+            }
+
+            container.appendChild(table);
+        }
+
+        // Set initial form values based on the first valid combination
+        function setInitialFormValues() {
+            const initialAgents = Object.keys(allowedCombinations)[0];
+            document.getElementById('agents').value = initialAgents;
+            document.getElementById('density').value = allowedCombinations[initialAgents][0];
+        }
 
         document.getElementById('simulation-form').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -121,15 +179,14 @@
             // Generate the folder name based on the input
             const folderName = `agents_${agents}_dens_${density}`;
 
-            // Assuming images are named sequentially like image1.png, image2.png, ..., imageN.png
-            // We will check for a reasonable number of images
+            // Load images with the new naming convention (agentX.png)
             imageFiles = [];
             for (let i = 1; i <= 10; i++) { // Adjust this number based on expected number of images
-                const imgPath = `images/${folderName}/agent{i}.png`;
+                const imgPath = `images/${folderName}/agent${i}.png`;
 
                 const img = new Image();
                 img.src = imgPath;
-                img.alt = `Agents: ${agents}, Density: ${density}, Image ${i}`;
+                img.alt = `Agent ${i}`;
 
                 // Check if the image exists
                 img.onload = function() {
