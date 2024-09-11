@@ -66,7 +66,7 @@
 </head>
 <body>
     <h1>Agent Simulation</h1>
-    <div class="description">This tool allows you to simulate different scenarios by adjusting the number of agents and density. Select your parameters below to see the results.</div>
+    <div class="description">This tool allows you to simulate different behavioural contagion processes. Select your parameters below to see the results.</div>
 
     <div id="combinations-table-container"></div> <!-- Table container for allowed combinations -->
 
@@ -181,7 +181,7 @@
 
             // Load images with the new naming convention (agentX.png)
             imageFiles = [];
-            for (let i = 1; i <= 10; i++) { // Adjust this number based on expected number of images
+            for (let i = 1; i <= 50; i++) { // Adjust this number based on expected number of images
                 const imgPath = `images/${folderName}/agent${i}.png`;
 
                 const img = new Image();
