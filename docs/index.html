@@ -114,26 +114,30 @@
 
         // Python script for DDM simulation
         const pythonScript = `
-import matplotlib.pyplot as plt
-import numpy as np
+        import matplotlib.pyplot as plt
+        import numpy as np
 
-def run_ddm():
-    x = np.linspace(0, 10, 100)
-    y = np.sin(x)
-    plt.figure()
-    plt.plot(x, y)
-    plt.title("DDM Simulation Result")
-    plt.xlabel("Time")
-    plt.ylabel("Amplitude")
-    plt.grid(True)
-    plt.savefig("plot.png", format="png", bbox_inches="tight")
-`;
+        def run_ddm():
+            x = np.linspace(0, 10, 100)
+            y = np.sin(x)
+            plt.figure()
+            plt.plot(x, y)
+            plt.title("DDM Simulation Result")
+            plt.xlabel("Time")
+            plt.ylabel("Amplitude")
+            plt.grid(True)
+            # Save the plot directly to the filesystem
+            with open("plot.png", "wb") as f:
+                plt.savefig(f, format="png", bbox_inches="tight")
+            plt.close()
+        `;
 
         document.getElementById("run-ddm-btn").addEventListener("click", async () => {
             const plotContainer = document.getElementById("plot-container");
             plotContainer.innerHTML = "Running DDM simulation...";
 
             try {
+                // Run the Python script
                 await pyodide.runPythonAsync(pythonScript);
 
                 // Fetch the saved plot from Pyodide's virtual filesystem
@@ -143,6 +147,7 @@ def run_ddm():
                 // Display the plot
                 plotContainer.innerHTML = `<img src="data:image/png;base64,${base64String}" alt="DDM Plot">`;
             } catch (error) {
+                // Handle errors gracefully
                 plotContainer.innerHTML = `<div class="notice">Error: ${error.message}</div>`;
             }
         });
