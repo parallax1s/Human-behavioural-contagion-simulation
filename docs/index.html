@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agent Simulation</title>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.23.0/full/pyodide.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -13,7 +14,7 @@
             display: block;
             margin-bottom: 8px;
         }
-        input[type="number"], input[type="submit"] {
+        input[type="number"], input[type="submit"], button {
             margin-bottom: 20px;
         }
         table {
@@ -62,6 +63,10 @@
             font-style: italic;
             color: #555;
         }
+        #plot-container {
+            text-align: center;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
@@ -92,8 +97,50 @@
         <div id="agent-name" class="agent-name"></div>
     </div>
 
+    <button id="run-ddm-btn">Run DDM</button>
+    <div id="plot-container"></div> <!-- Container to display the generated plot -->
+
     <script>
         let allowedCombinations = {};
+
+        // Load Pyodide
+        let pyodide;
+        async function loadPyodideAndPackages() {
+            pyodide = await loadPyodide();
+            await pyodide.loadPackage(["matplotlib", "numpy"]);
+        }
+        loadPyodideAndPackages();
+
+        // Python script for DDM simulation
+        const pythonScript = `
+import matplotlib.pyplot as plt
+import numpy as np
+
+def run_ddm():
+    x = np.linspace(0, 10, 100)
+    y = np.sin(x)
+    plt.figure()
+    plt.plot(x, y)
+    plt.title("DDM Simulation Result")
+    plt.xlabel("Time")
+    plt.ylabel("Amplitude")
+    plt.grid(True)
+    plt.savefig("plot.png", format="png", bbox_inches="tight")
+`;
+
+        // Run DDM simulation and display the plot
+        document.getElementById("run-ddm-btn").addEventListener("click", async () => {
+            const plotContainer = document.getElementById("plot-container");
+            plotContainer.innerHTML = "Running DDM simulation...";
+
+            try {
+                await pyodide.runPythonAsync(pythonScript);
+                const plotURL = pyodide.FS.readFile("plot.png", { encoding: "base64" });
+                plotContainer.innerHTML = `<img src="data:image/png;base64,${plotURL}" alt="DDM Plot">`;
+            } catch (error) {
+                plotContainer.innerHTML = `<div class="notice">Error: ${error.message}</div>`;
+            }
+        });
 
         // Load the combinations JSON file and display the table
         fetch('combinations.json')
@@ -145,91 +192,7 @@
             document.getElementById('agents').value = initialAgents;
             document.getElementById('density').value = allowedCombinations[initialAgents][0];
         }
-
-        document.getElementById('simulation-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            const agents = document.getElementById('agents').value;
-            const density = parseFloat(document.getElementById('density').value).toFixed(2);
-
-            const notice = document.getElementById('notice');
-            const carousel = document.getElementById('carousel');
-            const carouselImage = document.getElementById('carousel-image');
-            const agentName = document.getElementById('agent-name');
-            const imageCounter = document.getElementById('image-counter');
-            const prevBtn = document.getElementById('prev-btn');
-            const nextBtn = document.getElementById('next-btn');
-            let currentImageIndex = 0;
-            let imageFiles = [];
-
-            if (!allowedCombinations[agents]) {
-                notice.textContent = `Invalid number of agents. Allowed values: ${Object.keys(allowedCombinations).join(', ')}.`;
-                carousel.style.display = 'none';
-                return;
-            }
-
-            if (!allowedCombinations[agents].includes(density)) {
-                notice.textContent = `Invalid density value for ${agents} agents. Allowed values: ${allowedCombinations[agents].join(', ')}.`;
-                carousel.style.display = 'none';
-                return;
-            }
-
-            notice.textContent = '';
-
-            // Generate the folder name based on the input
-            const folderName = `agents_${agents}_dens_${density}`;
-
-            // Load images with the new naming convention (agentX.png)
-            imageFiles = [];
-            for (let i = 1; i <= 50; i++) { // Adjust this number based on expected number of images
-                const imgPath = `images/${folderName}/agent${i}.png`;
-
-                const img = new Image();
-                img.src = imgPath;
-                img.alt = `Agent ${i}`;
-
-                // Check if the image exists
-                img.onload = function() {
-                    imageFiles.push({
-                        src: imgPath,
-                        name: img.alt
-                    });
-
-                    if (imageFiles.length === 1) {
-                        // Display the first image immediately
-                        displayImage(0);
-                    }
-                };
-
-                img.onerror = function() {
-                    // Stop if an image does not exist
-                    if (i === 1 && imageFiles.length === 0) {
-                        notice.textContent = 'No images found for the selected combination.';
-                        carousel.style.display = 'none';
-                    }
-                };
-            }
-
-            function displayImage(index) {
-                carouselImage.src = imageFiles[index].src;
-                agentName.textContent = imageFiles[index].name;
-                imageCounter.textContent = `Image ${index + 1} of ${imageFiles.length}`;
-                currentImageIndex = index;
-                carousel.style.display = 'block';
-            }
-
-            prevBtn.addEventListener('click', function() {
-                if (currentImageIndex > 0) {
-                    displayImage(currentImageIndex - 1);
-                }
-            });
-
-            nextBtn.addEventListener('click', function() {
-                if (currentImageIndex < imageFiles.length - 1) {
-                    displayImage(currentImageIndex + 1);
-                }
-            });
-        });
     </script>
 </body>
 </html>
+
