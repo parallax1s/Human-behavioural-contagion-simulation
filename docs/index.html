@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agent Simulation</title>
     <style>
-        /* Existing CSS styles */
         body {
             font-family: Arial, sans-serif;
             padding: 20px;
@@ -63,18 +62,9 @@
             font-style: italic;
             color: #555;
         }
-        /* Additional styles for the plot */
-        #plot-container {
-            margin-top: 20px;
-            text-align: center;
-        }
-        #plot-container img {
-            max-width: 100%;
-            height: auto;
-        }
     </style>
     <!-- Include Pyodide -->
-    <script defer src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.24.0/full/pyodide.js"></script>
 </head>
 <body>
     <h1>Agent Simulation</h1>
@@ -104,8 +94,8 @@
         <div id="agent-name" class="agent-name"></div>
     </div>
 
-    <!-- New section to run Python script and display plot -->
-    <button id="run-python-btn">Run Python Script</button>
+    <!-- Section to display the Python plot -->
+    <h2>Python Plot Example</h2>
     <div id="plot-container"></div>
 
     <script>
@@ -197,9 +187,10 @@
 
             // Load images with the new naming convention (agentX.png)
             imageFiles = [];
-            let i = 1;
+            let imageCount = 50; // Adjust this number based on expected number of images
+            let loadedImages = 0;
 
-            function loadNextImage() {
+            for (let i = 1; i <= imageCount; i++) { // Adjust this number based on expected number of images
                 const imgPath = `images/${folderName}/agent${i}.png`;
 
                 const img = new Image();
@@ -211,17 +202,20 @@
                         src: imgPath,
                         name: img.alt
                     });
-                    i++;
-                    loadNextImage(); // Load the next image
+                    loadedImages++;
+
+                    if (loadedImages === 1) {
+                        // Display the first image immediately
+                        displayImage(0);
+                    }
                 };
 
                 img.onerror = function() {
-                    if (i === 1 && imageFiles.length === 0) {
+                    // Stop if an image does not exist
+                    imageCount = i - 1; // Update the image count
+                    if (loadedImages === 0) {
                         notice.textContent = 'No images found for the selected combination.';
                         carousel.style.display = 'none';
-                    } else {
-                        // All images loaded
-                        displayImage(0);
                     }
                 };
             }
@@ -245,67 +239,56 @@
                     displayImage(currentImageIndex + 1);
                 }
             };
-
-            loadNextImage(); // Start loading images
         });
 
-        // Initialize Pyodide
-        let pyodideReadyPromise = loadPyodide();
+        // Function to load Pyodide and run the Python code
+        async function loadAndRunPython() {
+            // Initialize Pyodide
+            let pyodide = await loadPyodide();
+            // Load necessary Python packages
+            await pyodide.loadPackage('matplotlib');
+            await pyodide.loadPackage('numpy');
 
-        document.getElementById('run-python-btn').addEventListener('click', async () => {
-            const plotContainer = document.getElementById('plot-container');
-            plotContainer.innerHTML = 'Running Python script...';
-
-            // Ensure Pyodide is ready
-            const pyodide = await pyodideReadyPromise;
-
-            // Load Matplotlib and other required packages
-            await pyodide.loadPackage(['matplotlib', 'numpy']);
-
-            // Python code to generate a random example plot
-            let pythonCode = `
+            // Define the Python code
+            let code = `
 import matplotlib.pyplot as plt
+import numpy as np
 import io
 import base64
-import numpy as np
 
 # Generate random data
 x = np.linspace(0, 10, 100)
 y = np.sin(x)
 
-# Create the plot
 plt.figure()
 plt.plot(x, y)
 plt.title('Random Example Plot')
+plt.xlabel('X-axis')
+plt.ylabel('Y-axis')
 
-# Save the plot to a bytes buffer
+# Save plot to a PNG image in memory
 buf = io.BytesIO()
 plt.savefig(buf, format='png')
 buf.seek(0)
-# Encode the image to base64
 img_base64 = base64.b64encode(buf.read()).decode('utf-8')
-            `;
+`;
 
-            try {
-                // Run the Python code
-                await pyodide.runPythonAsync(pythonCode);
+            // Run the Python code
+            await pyodide.runPythonAsync(code);
 
-                // Get the base64 image from Python
-                let imgBase64 = pyodide.globals.get('img_base64');
+            // Get the base64 image data
+            let img_base64 = pyodide.globals.get('img_base64');
 
-                // Create an image element and set its source to the base64 image
-                let img = document.createElement('img');
-                img.src = 'data:image/png;base64,' + imgBase64;
+            // Create an image element and set its source
+            let img = document.createElement('img');
+            img.src = 'data:image/png;base64,' + img_base64;
 
-                // Display the image in the plot container
-                plotContainer.innerHTML = ''; // Clear any existing content
-                plotContainer.appendChild(img);
-            } catch (err) {
-                console.error(err);
-                plotContainer.innerHTML = `<div class="notice">Error running Python script: ${err}</div>`;
-            }
-        });
+            // Append the image to the plot container
+            document.getElementById('plot-container').appendChild(img);
+        }
+
+        // Call the function to load and run the Python code
+        loadAndRunPython();
     </script>
 </body>
 </html>
-
