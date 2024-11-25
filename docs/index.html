@@ -107,7 +107,8 @@
         let pyodide;
         async function loadPyodideAndPackages() {
             pyodide = await loadPyodide();
-            await pyodide.loadPackage(["matplotlib", "numpy"]);
+            await pyodide.loadPackage("matplotlib");
+            await pyodide.loadPackage("numpy");
         }
         loadPyodideAndPackages();
 
