@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agent Simulation</title>
-    <script src="https://cdn.jsdelivr.net/pyodide/v0.23.0/full/pyodide.js"></script>
     <style>
+        /* Existing CSS styles */
         body {
             font-family: Arial, sans-serif;
             padding: 20px;
@@ -14,7 +14,7 @@
             display: block;
             margin-bottom: 8px;
         }
-        input[type="number"], input[type="submit"], button {
+        input[type="number"], input[type="submit"] {
             margin-bottom: 20px;
         }
         table {
@@ -63,11 +63,18 @@
             font-style: italic;
             color: #555;
         }
+        /* Additional styles for the plot */
         #plot-container {
-            text-align: center;
             margin-top: 20px;
+            text-align: center;
+        }
+        #plot-container img {
+            max-width: 100%;
+            height: auto;
         }
     </style>
+    <!-- Include Pyodide -->
+    <script defer src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
 </head>
 <body>
     <h1>Agent Simulation</h1>
@@ -97,105 +104,12 @@
         <div id="agent-name" class="agent-name"></div>
     </div>
 
-    <button id="run-ddm-btn">Run DDM</button>
-    <div id="plot-container"></div> <!-- Container to display the generated plot -->
+    <!-- New section to run Python script and display plot -->
+    <button id="run-python-btn">Run Python Script</button>
+    <div id="plot-container"></div>
 
     <script>
         let allowedCombinations = {};
-
-        // Load Pyodide
-        let pyodide;
-
-        async function loadPyodideAndPackages() {
-            console.log("Initializing Pyodide...");
-            pyodide = await loadPyodide();
-
-            console.log("Loading required Python packages...");
-            await pyodide.loadPackage("matplotlib");
-            await pyodide.loadPackage("numpy");
-
-            // Create a clean filesystem
-            try {
-                console.log("Initializing filesystem...");
-                pyodide.FS.mkdir("/tmp");
-                pyodide.FS.mount(pyodide.FS.filesystems.NODEFS, { root: "." }, "/tmp");
-                console.log("Filesystem initialized successfully!");
-            } catch (fsError) {
-                console.error("Error initializing filesystem:", fsError);
-            }
-        }
-
-        // Call the loader
-        loadPyodideAndPackages();
-
-        // Utility function to convert a Uint8Array to a Base64 string
-        function uint8ArrayToBase64(uint8Array) {
-            let binary = '';
-            const len = uint8Array.byteLength;
-            for (let i = 0; i < len; i++) {
-                binary += String.fromCharCode(uint8Array[i]);
-            }
-            return btoa(binary);
-        }
-
-        // Python script for DDM simulation with debug statements
-        const pythonScript = `
-        import matplotlib.pyplot as plt
-        import numpy as np
-        import os
-
-        def run_ddm():
-            print("Running DDM simulation...")
-            x = np.linspace(0, 10, 100)
-            y = np.sin(x)
-            plt.figure()
-            plt.plot(x, y)
-            plt.title("DDM Simulation Result")
-            plt.xlabel("Time")
-            plt.ylabel("Amplitude")
-            plt.grid(True)
-
-            # Save the plot to the virtual filesystem
-            plot_path = "plot.png"
-            try:
-                print(f"Attempting to save plot at {plot_path}...")
-                with open(plot_path, "wb") as f:
-                    plt.savefig(f, format="png", bbox_inches="tight")
-                print("Plot saved successfully.")
-            except Exception as e:
-                print(f"Error saving plot: {e}")
-            finally:
-                plt.close()
-
-            # Check if the file exists
-            if os.path.exists(plot_path):
-                print(f"Verified: {plot_path} exists.")
-            else:
-                print(f"Error: {plot_path} does not exist.")
-        `;
-
-        document.getElementById("run-ddm-btn").addEventListener("click", async () => {
-            const plotContainer = document.getElementById("plot-container");
-            plotContainer.innerHTML = "Running DDM simulation...";
-
-            try {
-                console.log("Executing Python script...");
-                await pyodide.runPythonAsync(`
-                    from run_ddm import run_ddm
-                    run_ddm()
-                `);
-
-                console.log("Attempting to read plot file from Pyodide FS...");
-                const uint8Array = pyodide.FS.readFile("plot.png");
-                console.log("Plot file read successfully!");
-
-                const base64String = uint8ArrayToBase64(uint8Array);
-                plotContainer.innerHTML = `<img src="data:image/png;base64,${base64String}" alt="DDM Plot">`;
-            } catch (error) {
-                console.error("Error during simulation or file handling:", error);
-                plotContainer.innerHTML = `<div class="notice">Error: ${error.message}</div>`;
-            }
-        });
 
         // Load the combinations JSON file and display the table
         fetch('combinations.json')
@@ -247,6 +161,150 @@
             document.getElementById('agents').value = initialAgents;
             document.getElementById('density').value = allowedCombinations[initialAgents][0];
         }
+
+        document.getElementById('simulation-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const agents = document.getElementById('agents').value;
+            const density = parseFloat(document.getElementById('density').value).toFixed(2);
+
+            const notice = document.getElementById('notice');
+            const carousel = document.getElementById('carousel');
+            const carouselImage = document.getElementById('carousel-image');
+            const agentName = document.getElementById('agent-name');
+            const imageCounter = document.getElementById('image-counter');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            let currentImageIndex = 0;
+            let imageFiles = [];
+
+            if (!allowedCombinations[agents]) {
+                notice.textContent = `Invalid number of agents. Allowed values: ${Object.keys(allowedCombinations).join(', ')}.`;
+                carousel.style.display = 'none';
+                return;
+            }
+
+            if (!allowedCombinations[agents].includes(density)) {
+                notice.textContent = `Invalid density value for ${agents} agents. Allowed values: ${allowedCombinations[agents].join(', ')}.`;
+                carousel.style.display = 'none';
+                return;
+            }
+
+            notice.textContent = '';
+
+            // Generate the folder name based on the input
+            const folderName = `agents_${agents}_dens_${density}`;
+
+            // Load images with the new naming convention (agentX.png)
+            imageFiles = [];
+            let i = 1;
+
+            function loadNextImage() {
+                const imgPath = `images/${folderName}/agent${i}.png`;
+
+                const img = new Image();
+                img.src = imgPath;
+                img.alt = `Agent ${i}`;
+
+                img.onload = function() {
+                    imageFiles.push({
+                        src: imgPath,
+                        name: img.alt
+                    });
+                    i++;
+                    loadNextImage(); // Load the next image
+                };
+
+                img.onerror = function() {
+                    if (i === 1 && imageFiles.length === 0) {
+                        notice.textContent = 'No images found for the selected combination.';
+                        carousel.style.display = 'none';
+                    } else {
+                        // All images loaded
+                        displayImage(0);
+                    }
+                };
+            }
+
+            function displayImage(index) {
+                carouselImage.src = imageFiles[index].src;
+                agentName.textContent = imageFiles[index].name;
+                imageCounter.textContent = `Image ${index + 1} of ${imageFiles.length}`;
+                currentImageIndex = index;
+                carousel.style.display = 'block';
+            }
+
+            prevBtn.onclick = function() {
+                if (currentImageIndex > 0) {
+                    displayImage(currentImageIndex - 1);
+                }
+            };
+
+            nextBtn.onclick = function() {
+                if (currentImageIndex < imageFiles.length - 1) {
+                    displayImage(currentImageIndex + 1);
+                }
+            };
+
+            loadNextImage(); // Start loading images
+        });
+
+        // Initialize Pyodide
+        let pyodideReadyPromise = loadPyodide();
+
+        document.getElementById('run-python-btn').addEventListener('click', async () => {
+            const plotContainer = document.getElementById('plot-container');
+            plotContainer.innerHTML = 'Running Python script...';
+
+            // Ensure Pyodide is ready
+            const pyodide = await pyodideReadyPromise;
+
+            // Load Matplotlib and other required packages
+            await pyodide.loadPackage(['matplotlib', 'numpy']);
+
+            // Python code to generate a random example plot
+            let pythonCode = `
+import matplotlib.pyplot as plt
+import io
+import base64
+import numpy as np
+
+# Generate random data
+x = np.linspace(0, 10, 100)
+y = np.sin(x)
+
+# Create the plot
+plt.figure()
+plt.plot(x, y)
+plt.title('Random Example Plot')
+
+# Save the plot to a bytes buffer
+buf = io.BytesIO()
+plt.savefig(buf, format='png')
+buf.seek(0)
+# Encode the image to base64
+img_base64 = base64.b64encode(buf.read()).decode('utf-8')
+            `;
+
+            try {
+                // Run the Python code
+                await pyodide.runPythonAsync(pythonCode);
+
+                // Get the base64 image from Python
+                let imgBase64 = pyodide.globals.get('img_base64');
+
+                // Create an image element and set its source to the base64 image
+                let img = document.createElement('img');
+                img.src = 'data:image/png;base64,' + imgBase64;
+
+                // Display the image in the plot container
+                plotContainer.innerHTML = ''; // Clear any existing content
+                plotContainer.appendChild(img);
+            } catch (err) {
+                console.error(err);
+                plotContainer.innerHTML = `<div class="notice">Error running Python script: ${err}</div>`;
+            }
+        });
     </script>
 </body>
 </html>
