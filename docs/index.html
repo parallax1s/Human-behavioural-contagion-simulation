@@ -107,16 +107,21 @@
         let pyodide;
 
         async function loadPyodideAndPackages() {
-            try {
-                console.log("Loading Pyodide...");
-                pyodide = await loadPyodide();
+            console.log("Initializing Pyodide...");
+            pyodide = await loadPyodide();
 
-                console.log("Loading required Python packages...");
-                await pyodide.loadPackage("matplotlib");
-                await pyodide.loadPackage("numpy");
-                console.log("Packages loaded successfully!");
-            } catch (error) {
-                console.error("Error loading Pyodide or packages:", error);
+            console.log("Loading required Python packages...");
+            await pyodide.loadPackage("matplotlib");
+            await pyodide.loadPackage("numpy");
+
+            // Create a clean filesystem
+            try {
+                console.log("Initializing filesystem...");
+                pyodide.FS.mkdir("/tmp");
+                pyodide.FS.mount(pyodide.FS.filesystems.NODEFS, { root: "." }, "/tmp");
+                console.log("Filesystem initialized successfully!");
+            } catch (fsError) {
+                console.error("Error initializing filesystem:", fsError);
             }
         }
 
@@ -149,15 +154,24 @@
             plt.xlabel("Time")
             plt.ylabel("Amplitude")
             plt.grid(True)
+
+            # Save the plot to the virtual filesystem
             plot_path = "plot.png"
-            print(f"Saving plot to {plot_path}...")
-            with open(plot_path, "wb") as f:
-                plt.savefig(f, format="png", bbox_inches="tight")
-            plt.close()
+            try:
+                print(f"Attempting to save plot at {plot_path}...")
+                with open(plot_path, "wb") as f:
+                    plt.savefig(f, format="png", bbox_inches="tight")
+                print("Plot saved successfully.")
+            except Exception as e:
+                print(f"Error saving plot: {e}")
+            finally:
+                plt.close()
+
+            # Check if the file exists
             if os.path.exists(plot_path):
-                print(f"Plot saved successfully at {plot_path}.")
+                print(f"Verified: {plot_path} exists.")
             else:
-                print(f"Failed to save plot at {plot_path}.")
+                print(f"Error: {plot_path} does not exist.")
         `;
 
         document.getElementById("run-ddm-btn").addEventListener("click", async () => {
@@ -166,7 +180,10 @@
 
             try {
                 console.log("Executing Python script...");
-                await pyodide.runPythonAsync(pythonScript);
+                await pyodide.runPythonAsync(`
+                    from run_ddm import run_ddm
+                    run_ddm()
+                `);
 
                 console.log("Attempting to read plot file from Pyodide FS...");
                 const uint8Array = pyodide.FS.readFile("plot.png");
