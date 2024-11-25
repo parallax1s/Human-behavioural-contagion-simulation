@@ -129,15 +129,19 @@ def run_ddm():
     plt.savefig("plot.png", format="png", bbox_inches="tight")
 `;
 
-        // Run DDM simulation and display the plot
         document.getElementById("run-ddm-btn").addEventListener("click", async () => {
             const plotContainer = document.getElementById("plot-container");
             plotContainer.innerHTML = "Running DDM simulation...";
 
             try {
                 await pyodide.runPythonAsync(pythonScript);
-                const plotURL = pyodide.FS.readFile("plot.png", { encoding: "base64" });
-                plotContainer.innerHTML = `<img src="data:image/png;base64,${plotURL}" alt="DDM Plot">`;
+
+                // Fetch the saved plot from Pyodide's virtual filesystem
+                const uint8Array = pyodide.FS.readFile("plot.png");
+                const base64String = uint8ArrayToBase64(uint8Array);
+
+                // Display the plot
+                plotContainer.innerHTML = `<img src="data:image/png;base64,${base64String}" alt="DDM Plot">`;
             } catch (error) {
                 plotContainer.innerHTML = `<div class="notice">Error: ${error.message}</div>`;
             }
