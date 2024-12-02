@@ -7,197 +7,291 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            display: grid;
-            grid-template-areas:
-                "header"
-                "parameters"
-                "plot"
-                "footer";
-            gap: 20px;
             padding: 20px;
-            max-width: 800px;
-            margin: auto;
         }
-        header {
-            grid-area: header;
-            text-align: center;
+        label {
+            display: block;
+            margin-bottom: 8px;
         }
-        .parameters {
-            grid-area: parameters;
+        input[type="number"], input[type="submit"] {
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ccc;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        .carousel {
             display: flex;
-            justify-content: center;
-            flex-direction: column;
-            gap: 15px;
-        }
-        .parameters label {
-            display: flex;
-            justify-content: space-between;
-        }
-        .parameters input {
-            width: 100px;
-            padding: 5px;
-        }
-        .parameters input.invalid {
-            border: 2px solid red;
-        }
-        .plot {
-            grid-area: plot;
-            display: flex;
-            justify-content: center;
             flex-direction: column;
             align-items: center;
         }
-        .plot img {
+        .carousel img {
             max-width: 100%;
-            border: 1px solid #ccc;
-            margin-top: 15px;
+            max-height: 500px;
         }
-        footer {
-            grid-area: footer;
-            text-align: center;
-            font-size: 0.9em;
-            color: #555;
+        .carousel-controls {
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        .carousel-controls button {
+            padding: 5px 10px;
+        }
+        .agent-name {
+            margin-top: 10px;
+            font-weight: bold;
         }
         .notice {
             color: red;
             font-weight: bold;
-            text-align: center;
+        }
+        .description {
+            margin-top: 10px;
+            font-style: italic;
+            color: #555;
         }
     </style>
+    <!-- Include Pyodide -->
     <script src="https://cdn.jsdelivr.net/pyodide/v0.24.0/full/pyodide.js"></script>
 </head>
 <body>
-    <header>
-        <h1>Agent Simulation</h1>
-        <p>Simulate different behavioral contagion processes by selecting your parameters below.</p>
-    </header>
+    <h1>Agent Simulation</h1>
+    <div class="description">This tool allows you to simulate different behavioural contagion processes. Select your parameters below to see the results.</div>
 
-    <section class="parameters">
-        <label for="agents">
-            Number of Agents: <span aria-hidden="true">(5-25)</span>
-            <input type="number" id="agents" name="agents" min="5" max="25" step="1" required>
-        </label>
-        <label for="density">
-            Density: <span aria-hidden="true">(0.80-1.20)</span>
-            <input type="number" id="density" name="density" step="0.01" min="0.80" max="1.20" required>
-        </label>
-        <button id="generate-button">Generate Images</button>
-        <div id="notice" class="notice"></div>
-    </section>
+    <div id="combinations-table-container"></div> <!-- Table container for allowed combinations -->
 
-    <section class="plot">
-        <h2>Simulation Results</h2>
-        <button id="run-python-button">Run Simulation</button>
-        <div id="plot-container"></div>
-    </section>
+    <form id="simulation-form">
+        <label for="agents">Number of Agents:</label>
+        <input type="number" id="agents" name="agents" min="5" max="25" step="1" required>
 
-    <footer>
-        <p>&copy; 2024 Agent Simulation. All rights reserved.</p>
-    </footer>
+        <label for="density">Density:</label>
+        <input type="number" id="density" name="density" step="0.01" min="0.80" max="1.20" required>
+
+        <input type="submit" value="Generate">
+    </form>
+
+    <div id="notice" class="notice"></div>
+
+    <div class="carousel" id="carousel" style="display: none;">
+        <img id="carousel-image" src="" alt="">
+        <div class="carousel-controls">
+            <button id="prev-btn">Previous</button>
+            <span id="image-counter"></span>
+            <button id="next-btn">Next</button>
+        </div>
+        <div id="agent-name" class="agent-name"></div>
+    </div>
+
+    <!-- Section to display the Python plot -->
+    <h2>Python Plot Example</h2>
+    <button id="run-python-button">Run Python Script</button>
+    <div id="plot-container"></div>
 
     <script>
-        let allowedCombinations = {}; // Load dynamically from JSON.
+        let allowedCombinations = {};
 
-        // Fetch combinations.json and initialize form
+        // Load the combinations JSON file and display the table
         fetch('combinations.json')
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to load combinations.json');
+                }
+                return response.json();
+            })
             .then(data => {
                 allowedCombinations = data;
+                displayCombinationsTable();
                 setInitialFormValues();
             })
             .catch(error => {
-                document.getElementById('notice').textContent = `Error loading data: ${error.message}`;
+                document.getElementById('combinations-table-container').innerHTML = `<div class="notice">Error: ${error.message}</div>`;
             });
 
-        // Set initial form values
+        // Function to display the combinations table
+        function displayCombinationsTable() {
+            const container = document.getElementById('combinations-table-container');
+            const table = document.createElement('table');
+            const headerRow = document.createElement('tr');
+            const agentHeader = document.createElement('th');
+            agentHeader.textContent = 'Number of Agents';
+            const densityHeader = document.createElement('th');
+            densityHeader.textContent = 'Allowed Densities';
+            headerRow.appendChild(agentHeader);
+            headerRow.appendChild(densityHeader);
+            table.appendChild(headerRow);
+
+            for (const [agents, densities] of Object.entries(allowedCombinations)) {
+                const row = document.createElement('tr');
+                const agentCell = document.createElement('td');
+                agentCell.textContent = agents;
+                const densityCell = document.createElement('td');
+                densityCell.textContent = densities.join(', ');
+                row.appendChild(agentCell);
+                row.appendChild(densityCell);
+                table.appendChild(row);
+            }
+
+            container.appendChild(table);
+        }
+
+        // Set initial form values based on the first valid combination
         function setInitialFormValues() {
             const initialAgents = Object.keys(allowedCombinations)[0];
             document.getElementById('agents').value = initialAgents;
             document.getElementById('density').value = allowedCombinations[initialAgents][0];
         }
 
-        // Generate button functionality: Validate inputs and display images
-        document.getElementById('generate-button').addEventListener('click', function () {
-            const agentsInput = document.getElementById('agents');
-            const densityInput = document.getElementById('density');
-            const notice = document.getElementById('notice');
+        document.getElementById('simulation-form').addEventListener('submit', function(e) {
+            e.preventDefault();
 
-            const agents = agentsInput.value;
-            const density = parseFloat(densityInput.value).toFixed(2);
+            const agents = document.getElementById('agents').value;
+            const density = parseFloat(document.getElementById('density').value).toFixed(2);
+
+            const notice = document.getElementById('notice');
+            const carousel = document.getElementById('carousel');
+            const carouselImage = document.getElementById('carousel-image');
+            const agentName = document.getElementById('agent-name');
+            const imageCounter = document.getElementById('image-counter');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            let currentImageIndex = 0;
+            let imageFiles = [];
 
             if (!allowedCombinations[agents]) {
-                agentsInput.classList.add('invalid');
                 notice.textContent = `Invalid number of agents. Allowed values: ${Object.keys(allowedCombinations).join(', ')}.`;
+                carousel.style.display = 'none';
                 return;
-            } else {
-                agentsInput.classList.remove('invalid');
             }
 
             if (!allowedCombinations[agents].includes(density)) {
-                densityInput.classList.add('invalid');
-                notice.textContent = `Invalid density for ${agents} agents. Allowed values: ${allowedCombinations[agents].join(', ')}.`;
+                notice.textContent = `Invalid density value for ${agents} agents. Allowed values: ${allowedCombinations[agents].join(', ')}.`;
+                carousel.style.display = 'none';
                 return;
-            } else {
-                densityInput.classList.remove('invalid');
             }
 
             notice.textContent = '';
-            displayImages(agents, density);
-        });
 
-        // Function to display images
-        function displayImages(agents, density) {
-            const folderName = `images/agents_${agents}_dens_${density}`;
-            const imageContainer = document.getElementById('plot-container');
-            imageContainer.innerHTML = ''; // Clear previous content
+            // Generate the folder name based on the input
+            const folderName = `agents_${agents}_dens_${density}`;
 
-            let imagesFound = false;
+            // Load images with the new naming convention (agentX.png)
+            imageFiles = [];
+            let imageCount = 50; // Adjust this number based on expected number of images
+            let loadedImages = 0;
 
-            // Dynamically load images
-            for (let i = 1; i <= 10; i++) { // Assuming max 10 images
-                const img = document.createElement('img');
-                img.src = `${folderName}/agent${i}.png`;
+            for (let i = 1; i <= imageCount; i++) { // Adjust this number based on expected number of images
+                const imgPath = `images/${folderName}/agent${i}.png`;
+
+                const img = new Image();
+                img.src = imgPath;
                 img.alt = `Agent ${i}`;
-                img.onerror = () => {}; // Skip missing images
 
-                img.onload = () => {
-                    imagesFound = true;
-                    imageContainer.appendChild(img);
+                img.onload = function() {
+                    imageFiles.push({
+                        src: imgPath,
+                        name: img.alt
+                    });
+                    loadedImages++;
+
+                    if (loadedImages === 1) {
+                        // Display the first image immediately
+                        displayImage(0);
+                    }
+                };
+
+                img.onerror = function() {
+                    // Stop if an image does not exist
+                    imageCount = i - 1; // Update the image count
+                    if (loadedImages === 0) {
+                        notice.textContent = 'No images found for the selected combination.';
+                        carousel.style.display = 'none';
+                    }
                 };
             }
 
-            if (!imagesFound) {
-                document.getElementById('notice').textContent = 'No images found for the selected parameters.';
+            function displayImage(index) {
+                carouselImage.src = imageFiles[index].src;
+                agentName.textContent = imageFiles[index].name;
+                imageCounter.textContent = `Image ${index + 1} of ${imageFiles.length}`;
+                currentImageIndex = index;
+                carousel.style.display = 'block';
             }
-        }
 
-        // Run simulation button functionality: Execute Python script
-        async function runPythonSimulation() {
-            const agents = document.getElementById('agents').value;
-            const density = document.getElementById('density').value;
+            prevBtn.onclick = function() {
+                if (currentImageIndex > 0) {
+                    displayImage(currentImageIndex - 1);
+                }
+            };
 
-            const pyodide = await loadPyodide();
-            await pyodide.loadPackage(['matplotlib', 'numpy']);
+            nextBtn.onclick = function() {
+                if (currentImageIndex < imageFiles.length - 1) {
+                    displayImage(currentImageIndex + 1);
+                }
+            };
+        });
 
-            // Fetch the Python script
-            const response = await fetch('plot_generator.py');
-            const pythonCode = await response.text();
+        // Function to load Pyodide and run the Python code
+        async function loadAndRunPython() {
+            // Initialize Pyodide
+            let pyodide = await loadPyodide();
+            // Load necessary Python packages
+            await pyodide.loadPackage('matplotlib');
+            await pyodide.loadPackage('numpy');
 
-            // Load and run the Python script
-            pyodide.runPython(pythonCode);
+            // Define the Python code
+            let code = `
+import matplotlib.pyplot as plt
+import numpy as np
+import io
+import base64
 
-            // Call the Python function and display the result
-            const plotBase64 = pyodide.runPython(`generate_plot(${agents}, ${density})`);
-            const img = document.createElement('img');
-            img.src = 'data:image/png;base64,' + plotBase64;
+# Generate random data
+x = np.linspace(0, 10, 100)
+y = np.sin(x)
 
+plt.figure()
+plt.plot(x, y)
+plt.title('Random Example Plot')
+plt.xlabel('X-axis')
+plt.ylabel('Y-axis')
+
+# Save plot to a PNG image in memory
+buf = io.BytesIO()
+plt.savefig(buf, format='png')
+buf.seek(0)
+img_base64 = base64.b64encode(buf.read()).decode('utf-8')
+`;
+
+            // Run the Python code
+            await pyodide.runPythonAsync(code);
+
+            // Get the base64 image data
+            let img_base64 = pyodide.globals.get('img_base64');
+
+            // Create an image element and set its source
+            let img = document.createElement('img');
+            img.src = 'data:image/png;base64,' + img_base64;
+
+            // Append the image to the plot container
             const plotContainer = document.getElementById('plot-container');
-            plotContainer.innerHTML = ''; // Clear previous plot
+            plotContainer.innerHTML = '';
             plotContainer.appendChild(img);
         }
 
-        // Attach event to Run Simulation button
-        document.getElementById('run-python-button').addEventListener('click', runPythonSimulation);
+        // Call the function to load and run the Python code
+        document.getElementById('run-python-button').addEventListener('click', loadAndRunPython);
     </script>
 </body>
 </html>
