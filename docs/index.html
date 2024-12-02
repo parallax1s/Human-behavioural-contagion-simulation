@@ -81,7 +81,7 @@
             Density: <span aria-hidden="true">(0.80-1.20)</span>
             <input type="number" id="density" name="density" step="0.01" min="0.80" max="1.20" required>
         </label>
-        <button id="simulate-button">Generate</button>
+        <button id="generate-button">Generate Images</button>
         <div id="notice" class="notice"></div>
     </section>
 
@@ -116,8 +116,8 @@
             document.getElementById('density').value = allowedCombinations[initialAgents][0];
         }
 
-        // Add simulation button handler
-        document.getElementById('simulate-button').addEventListener('click', function () {
+        // Generate button functionality: Validate inputs and display images
+        document.getElementById('generate-button').addEventListener('click', function () {
             const agentsInput = document.getElementById('agents');
             const densityInput = document.getElementById('density');
             const notice = document.getElementById('notice');
@@ -142,11 +142,40 @@
             }
 
             notice.textContent = '';
-            runPythonSimulation(agents, density);
+            displayImages(agents, density);
         });
 
-        // Load and run external Python script
-        async function runPythonSimulation(agents, density) {
+        // Function to display images
+        function displayImages(agents, density) {
+            const folderName = `images/agents_${agents}_dens_${density}`;
+            const imageContainer = document.getElementById('plot-container');
+            imageContainer.innerHTML = ''; // Clear previous content
+
+            let imagesFound = false;
+
+            // Dynamically load images
+            for (let i = 1; i <= 10; i++) { // Assuming max 10 images
+                const img = document.createElement('img');
+                img.src = `${folderName}/agent${i}.png`;
+                img.alt = `Agent ${i}`;
+                img.onerror = () => {}; // Skip missing images
+
+                img.onload = () => {
+                    imagesFound = true;
+                    imageContainer.appendChild(img);
+                };
+            }
+
+            if (!imagesFound) {
+                document.getElementById('notice').textContent = 'No images found for the selected parameters.';
+            }
+        }
+
+        // Run simulation button functionality: Execute Python script
+        async function runPythonSimulation() {
+            const agents = document.getElementById('agents').value;
+            const density = document.getElementById('density').value;
+
             const pyodide = await loadPyodide();
             await pyodide.loadPackage(['matplotlib', 'numpy']);
 
@@ -166,6 +195,9 @@
             plotContainer.innerHTML = ''; // Clear previous plot
             plotContainer.appendChild(img);
         }
+
+        // Attach event to Run Simulation button
+        document.getElementById('run-python-button').addEventListener('click', runPythonSimulation);
     </script>
 </body>
 </html>
