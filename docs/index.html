@@ -8,7 +8,11 @@
         body {
             font-family: Arial, sans-serif;
             padding: 20px;
+            text-align: center; /* Center-align text */
         }
+        form, table, .carousel {
+                    margin: 0 auto; /* Center the element */
+                }
         label {
             display: block;
             margin-bottom: 8px;
@@ -17,9 +21,9 @@
             margin-bottom: 20px;
         }
         table {
-            width: 100%;
+            width: auto;
             border-collapse: collapse;
-            margin-bottom: 20px;
+            margin-bottom: 20px auto;
         }
         table, th, td {
             border: 1px solid #ccc;
@@ -37,6 +41,8 @@
             align-items: center;
         }
         .carousel img {
+            display: block;
+            margin: 0 auto;
             max-width: 100%;
             max-height: 500px;
         }
@@ -69,30 +75,80 @@
 <body>
     <h1>Agent Simulation</h1>
     <div class="description">This tool allows you to simulate different behavioural contagion processes. Select your parameters below to see the results.</div>
+    
+    <div id="combinations-table-container" style="display: none;"></div> <!-- Table container for allowed combinations -->
+    <button id="show-table-button">Show Available Combinations</button>
+    <!-- HTML for the table container and button -->
+    <div id="combinations-table-container" style="display: none;"></div>
+    <button id="show-table-button">Show Available Combinations</button>
 
-    <div id="combinations-table-container"></div> <!-- Table container for allowed combinations -->
+    <script>
+        // Event listener to toggle the visibility of the table
+        document.getElementById('show-table-button').addEventListener('click', function () {
+            const tableContainer = document.getElementById('combinations-table-container');
+            if (tableContainer.style.display === 'none' || tableContainer.style.display === '') {
+                tableContainer.style.display = 'block';
+            } else {
+                tableContainer.style.display = 'none';
+            }
+        });
 
-    <form id="simulation-form">
-        <label for="agents">Number of Agents:</label>
-        <input type="number" id="agents" name="agents" min="5" max="25" step="1" required>
+        // Form submission handler to validate combinations
+        document.getElementById('simulation-form').addEventListener('submit', function (e) {
+            e.preventDefault();
 
-        <label for="density">Density:</label>
-        <input type="number" id="density" name="density" step="0.01" min="0.80" max="1.20" required>
+            const agents = document.getElementById('agents').value;
+            const density = parseFloat(document.getElementById('density').value).toFixed(2);
+            const notice = document.getElementById('notice');
+            const carousel = document.getElementById('carousel');
 
-        <input type="submit" value="Generate">
-    </form>
+            // Check for invalid number of agents
+            if (!allowedCombinations[agents]) {
+                notice.textContent = `Invalid number of agents. Allowed values: ${Object.keys(allowedCombinations).join(', ')}.`;
+                carousel.style.display = 'none';
+                document.getElementById('combinations-table-container').style.display = 'block'; // Show the table
+                return;
+            }
 
-    <div id="notice" class="notice"></div>
+            // Check for invalid density value
+            if (!allowedCombinations[agents].includes(density)) {
+                notice.textContent = `Invalid density value for ${agents} agents. Allowed values: ${allowedCombinations[agents].join(', ')}.`;
+                carousel.style.display = 'none';
+                document.getElementById('combinations-table-container').style.display = 'block'; // Show the table
+                return;
+            }
 
-    <div class="carousel" id="carousel" style="display: none;">
-        <img id="carousel-image" src="" alt="">
-        <div class="carousel-controls">
-            <button id="prev-btn">Previous</button>
-            <span id="image-counter"></span>
-            <button id="next-btn">Next</button>
-        </div>
-        <div id="agent-name" class="agent-name"></div>
-    </div>
+            // Clear notice and hide table on valid input
+            notice.textContent = '';
+            document.getElementById('combinations-table-container').style.display = 'none';
+
+            <form id="simulation-form">
+                <label for="agents">Number of Agents:</label>
+                <input type="number" id="agents" name="agents" min="5" max="25" step="1" required>
+
+                <label for="density">Density:</label>
+                <input type="number" id="density" name="density" step="0.01" min="0.80" max="1.20" required>
+
+                <input type="submit" value="Generate">
+            </form>
+
+            <div id="notice" class="notice"></div>
+
+            <div class="carousel" id="carousel" style="display: none;">
+                <img id="carousel-image" src="" alt="">
+                <div class="carousel-controls">
+                    <button id="prev-btn">Previous</button>
+                    <span id="image-counter"></span>
+                    <button id="next-btn">Next</button>
+                </div>
+                <div id="agent-name" class="agent-name"></div>
+            </div>
+        });
+    </script>
+
+
+
+    
 
     <!-- Section to display the Python plot -->
     <h2>Python Plot Example</h2>
@@ -247,32 +303,15 @@
             // Initialize Pyodide
             let pyodide = await loadPyodide();
             // Load necessary Python packages
-            await pyodide.loadPackage('matplotlib');
-            await pyodide.loadPackage('numpy');
+            await pyodide.loadPackage(['matplotlib', 'numpy']);
 
-            // Define the Python code
-            let code = `
-import matplotlib.pyplot as plt
-import numpy as np
-import io
-import base64
-
-# Generate random data
-x = np.linspace(0, 10, 100)
-y = np.sin(x)
-
-plt.figure()
-plt.plot(x, y)
-plt.title('Random Example Plot')
-plt.xlabel('X-axis')
-plt.ylabel('Y-axis')
-
-# Save plot to a PNG image in memory
-buf = io.BytesIO()
-plt.savefig(buf, format='png')
-buf.seek(0)
-img_base64 = base64.b64encode(buf.read()).decode('utf-8')
-`;
+            // Fetch the Python script from the repository
+            let response = await fetch('script.py');
+            if (!response.ok) {
+                console.error('Failed to load script.py');
+                return;
+            }
+            let code = await response.text();
 
             // Run the Python code
             await pyodide.runPythonAsync(code);
