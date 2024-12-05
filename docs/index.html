@@ -82,8 +82,8 @@
         <input type="number" id="agents" name="agents" min="5" max="25" step="1" required>
 
         <label for="density">Density:</label>
-        <input type="number" id="density" name="density" step="0.01" min="0.80" max="1.20" required>
-
+        <input type="number" id="density" name="density" step="0.001" min="0.80" max="1.20" required>
+        <br><br>
         <input type="submit" value="Generate">
     </form>
 
@@ -194,6 +194,8 @@
             // Load images with the new naming convention (agentX.png)
             imageFiles = [];
             let imageCount = 50; // Adjust this number based on expected number of images
+            let imagesTried = 0;
+            let imagesFailed = 0;
             let loadedImages = 0;
 
             for (let i = 1; i <= imageCount; i++) { // Adjust this number based on expected number of images
@@ -217,13 +219,14 @@
                 };
 
                 img.onerror = function() {
-                    // Stop if an image does not exist
-                    imageCount = i - 1; // Update the image count
-                    if (loadedImages === 0) {
+                    imagesFailed++;
+                    if (imagesFailed === imageCount) {
+                        // All images failed to load
                         notice.textContent = 'No images found for the selected combination.';
                         carousel.style.display = 'none';
                     }
                 };
+                imagesTried++;
             }
 
             function displayImage(index) {
