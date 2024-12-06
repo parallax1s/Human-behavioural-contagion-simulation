@@ -187,7 +187,6 @@
             const folderName = `agents_${agents}_dens_${density}`;
 
             // Load images with the naming convention (agentX.png)
-            imageFiles = [];
             let imageCount = 50; // Adjust this number based on expected number of images
             let imagesFailed = 0;
             let loadedImages = 0;
@@ -206,14 +205,9 @@
                     });
                     loadedImages++;
 
-                    if (loadedImages === 1) {
-                        // Display the first image immediately
-                        displayImage(0);
-                    }
-
-                    // Once all loaded or attempts done, build buttons
+                    // If all attempts (loaded+failed) are done, finalize
                     if (loadedImages + imagesFailed === imageCount) {
-                        buildImageButtons();
+                        finalizeImages();
                     }
                 };
 
@@ -224,10 +218,27 @@
                         notice.textContent = 'No images found for the selected combination.';
                         carousel.style.display = 'none';
                     } else if (loadedImages + imagesFailed === imageCount && loadedImages > 0) {
-                        // Some images loaded, some failed
-                        buildImageButtons();
+                        // Some images loaded, some failed, still finalize
+                        finalizeImages();
                     }
                 };
+            }
+
+            function finalizeImages() {
+                // Sort images by agent number to ensure agent1 is on the left and the highest number on the right
+                imageFiles.sort((a,b) => {
+                    const aNum = parseInt(a.name.replace(/\D/g, ''), 10);
+                    const bNum = parseInt(b.name.replace(/\D/g, ''), 10);
+                    return aNum - bNum;
+                });
+
+                if (imageFiles.length > 0) {
+                    displayImage(0);
+                    buildImageButtons();
+                } else {
+                    notice.textContent = 'No images found for the selected combination.';
+                    carousel.style.display = 'none';
+                }
             }
 
             function displayImage(index) {
