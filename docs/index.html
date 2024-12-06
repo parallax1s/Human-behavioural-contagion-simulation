@@ -267,7 +267,7 @@
             await pyodide.loadPackage(['matplotlib', 'numpy']);
 
             // Fetch the Python script from the repository
-            let response = await fetch('docs/plot_generator.py');
+            let response = await fetch('plot_generator.py');
             if (!response.ok) {
                 console.error('Failed to load script.py');
                 return;
