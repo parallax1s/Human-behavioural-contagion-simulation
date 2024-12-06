@@ -179,20 +179,8 @@
 
             let imageEntries = [];
             const folderName = `agents_${agents}_dens_${density}`;
-            let imageCount = 50; // Adjust this number based on expected number of images
+            let imageCount = 50; // Adjust this number as needed
             let imagesTried = 0;
-            let frontLoadCount = 0;
-            let totalLoadAttempts = imageCount;
-
-            // A helper function to load an image and return a promise
-            function loadImage(url) {
-                return new Promise((resolve, reject) => {
-                    const img = new Image();
-                    img.onload = () => resolve(img);
-                    img.onerror = () => reject(new Error(`Failed to load ${url}`));
-                    img.src = url;
-                });
-            }
 
             if (!allowedCombinations[agents]) {
                 notice.textContent = `Invalid number of agents. Allowed values: ${Object.keys(allowedCombinations).join(', ')}.`;
@@ -209,27 +197,43 @@
             notice.textContent = '';
             carousel.style.display = 'none';
 
-            // Load both front and top images
-            // Once both are loaded for an agent, we add it to imageEntries
+            // Helper function to load a single image
+            function loadImage(url) {
+                return new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.onload = () => resolve(img);
+                    img.onerror = () => {
+                        console.error(`Could not load image at ${url}`);
+                        reject(new Error(`Failed to load ${url}`));
+                    };
+                    img.src = url;
+                });
+            }
+
+            // Attempt to load all images (front and top) for each agent
             for (let i = 1; i <= imageCount; i++) {
                 const frontPath = `images/${folderName}/agent${i}.png`;
-                const topPath = `docs/images_top_view/${folderName}/agent${i}.png`;
+                const topPath = `images_top_view/${folderName}/agent${i}.png`;
 
-                Promise.all([loadImage(frontPath), loadImage(topPath)]).then(([frontImg, topImg]) => {
-                    imageEntries.push({
-                        index: i,
-                        name: frontImg.alt || `Agent ${i}`,
-                        frontSrc: frontPath,
-                        topSrc: topPath
+                Promise.all([loadImage(frontPath), loadImage(topPath)])
+                    .then(([frontImg, topImg]) => {
+                        const name = `Agent ${i}`;
+                        imageEntries.push({
+                            index: i,
+                            name: name,
+                            frontSrc: frontPath,
+                            topSrc: topPath
+                        });
+                    })
+                    .catch(() => {
+                        // If any image for this agent fails, we do nothing for that agent
+                    })
+                    .finally(() => {
+                        imagesTried++;
+                        if (imagesTried === imageCount) {
+                            finalizeImages();
+                        }
                     });
-                }).catch(() => {
-                    // If any image fails, we just ignore that index
-                }).finally(() => {
-                    imagesTried++;
-                    if (imagesTried === imageCount) {
-                        finalizeImages();
-                    }
-                });
             }
 
             function finalizeImages() {
@@ -239,9 +243,10 @@
                     return;
                 }
 
-                // Sort by index to ensure agent1 is left and highest number right
+                // Sort by index to ensure order from agent1 to agentN
                 imageEntries.sort((a, b) => a.index - b.index);
 
+                // Show the first image
                 displayImage(0);
                 buildImageButtons();
                 carousel.style.display = 'block';
@@ -256,6 +261,7 @@
 
             function buildImageButtons() {
                 carouselButtons.innerHTML = '';
+                // Create a button for each agent in order
                 for (let i = 0; i < imageEntries.length; i++) {
                     const btn = document.createElement('button');
                     btn.textContent = imageEntries[i].name;
@@ -267,12 +273,9 @@
 
         // Function to load Pyodide and run the Python code
         async function loadAndRunPython() {
-            // Initialize Pyodide
             let pyodide = await loadPyodide();
-            // Load necessary Python packages
             await pyodide.loadPackage(['matplotlib', 'numpy']);
 
-            // Fetch the Python script from the repository
             let response = await fetch('docs/plot_generator.py');
             if (!response.ok) {
                 console.error('Failed to load script.py');
@@ -280,24 +283,20 @@
             }
             let code = await response.text();
 
-            // Run the Python code
             await pyodide.runPythonAsync(code);
 
-            // Get the base64 image data
             let img_base64 = pyodide.globals.get('img_base64');
 
-            // Create an image element and set its source
             let img = document.createElement('img');
             img.src = 'data:image/png;base64,' + img_base64;
 
-            // Append the image to the plot container
             const plotContainer = document.getElementById('plot-container');
             plotContainer.innerHTML = '';
             plotContainer.appendChild(img);
         }
 
-        // Call the function to load and run the Python code
         document.getElementById('run-python-button').addEventListener('click', loadAndRunPython);
     </script>
 </body>
 </html>
+
