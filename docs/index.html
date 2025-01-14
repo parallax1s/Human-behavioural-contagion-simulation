@@ -1,298 +1,346 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agent Simulation</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-            text-align: center; /* Center-align text */
-        }
-        form, table, .carousel {
-            margin: 0 auto; /* Center the element */
-        }
-        label {
-            display: block;
-            margin-bottom: 8px;
-        }
-        input[type="number"], input[type="submit"] {
-            margin-bottom: 20px;
-        }
-        table {
-            width: auto; /* Let the table width adjust to its content */
-            margin: 20px auto; /* Center the table */
-        }
-        table, th, td {
-            border: 1px solid #ccc;
-        }
-        th, td {
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #f4f4f4;
-        }
-        .carousel {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .carousel img {
-            display: block;
-            margin: 0 auto;
-            max-width: 100%;
-            max-height: 500px;
-        }
-        .carousel-buttons {
-            margin-top: 10px;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 5px;
-        }
-        .carousel-buttons button {
-            padding: 5px 10px;
-        }
-        .agent-name {
-            margin-top: 10px;
-            font-weight: bold;
-        }
-        .notice {
-            color: red;
-            font-weight: bold;
-        }
-        .description {
-            margin-top: 10px;
-            font-style: italic;
-            color: #555;
-        }
-    </style>
-    <!-- Include Pyodide -->
-    <script src="https://cdn.jsdelivr.net/pyodide/v0.24.0/full/pyodide.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Agent Simulation</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      text-align: center; /* Center-align text */
+    }
+    form, table, .carousel {
+      margin: 0 auto; /* Center the element */
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+    }
+    input[type="number"], input[type="submit"] {
+      margin-bottom: 20px;
+    }
+    table {
+      width: auto; /* Let the table width adjust to its content */
+      margin: 20px auto; /* Center the table */
+    }
+    table, th, td {
+      border: 1px solid #ccc;
+    }
+    th, td {
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f4f4f4;
+    }
+    .carousel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .image-container {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      max-width: 100%;
+      margin-bottom: 10px;
+    }
+    .carousel img {
+      max-width: 100%;
+      max-height: 500px;
+      display: block;
+    }
+    .carousel-buttons {
+      margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 5px;
+    }
+    .carousel-buttons button {
+      padding: 5px 10px;
+    }
+    .agent-name {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    .notice {
+      color: red;
+      font-weight: bold;
+    }
+    .description {
+      margin-top: 10px;
+      font-style: italic;
+      color: #555;
+    }
+  </style>
+  <!-- Include Pyodide -->
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.24.0/full/pyodide.js"></script>
 </head>
 <body>
-    <h1>Agent Simulation</h1>
-    <div class="description">This tool allows you to simulate different behavioural contagion processes. Select your parameters below to see the results.</div>
+  <h1>Agent Simulation</h1>
+  <div class="description">This tool allows you to simulate different behavioural contagion processes. Select your parameters below to see the results.</div>
 
-    <div id="combinations-table-container"></div> <!-- Table container for allowed combinations -->
+  <div id="combinations-table-container"></div> <!-- Table container for allowed combinations -->
 
-    <form id="simulation-form">
-        <label for="agents">Number of Agents:</label>
-        <input type="number" id="agents" name="agents" min="5" max="25" step="1" required>
+  <form id="simulation-form">
+    <label for="agents">Number of Agents:</label>
+    <input type="number" id="agents" name="agents" min="5" max="25" step="1" required>
 
-        <label for="density">Density:</label>
-        <input type="number" id="density" name="density" step="0.001" min="0.80" max="1.20" required>
-        <br>
-        <input type="submit" value="Generate">
-    </form>
+    <label for="density">Density:</label>
+    <input type="number" id="density" name="density" step="0.001" min="0.80" max="1.20" required>
+    <br>
+    <input type="submit" value="Generate">
+  </form>
 
-    <div id="notice" class="notice"></div>
+  <div id="notice" class="notice"></div>
 
-    <div class="carousel" id="carousel" style="display: none;">
-        <img id="carousel-image" src="" alt="">
-        <div class="carousel-buttons" id="carousel-buttons"></div>
-        <div id="agent-name" class="agent-name"></div>
+  <div class="carousel" id="carousel" style="display: none;">
+    <div class="image-container">
+      <img id="carousel-image-left" src="" alt="Top View" />
+      <img id="carousel-image-right" src="" alt="Main View" />
     </div>
+    <div class="carousel-buttons" id="carousel-buttons"></div>
+    <div id="agent-name" class="agent-name"></div>
+  </div>
 
-    <!-- Section to display the Python plot -->
-    <h2>Python Plot Example</h2>
-    <button id="run-python-button">Run Python Script</button>
-    <div id="plot-container"></div>
+  <!-- Section to display the Python plot -->
+  <h2>Python Plot Example</h2>
+  <button id="run-python-button">Run Python Script</button>
+  <div id="plot-container"></div>
 
-    <script>
-        let allowedCombinations = {};
+  <script>
+    let allowedCombinations = {};
 
-        // Load the combinations JSON file and display the table
-        fetch('combinations.json')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Failed to load combinations.json');
-                }
-                return response.json();
-            })
-            .then(data => {
-                allowedCombinations = data;
-                displayCombinationsTable();
-                setInitialFormValues();
-            })
-            .catch(error => {
-                document.getElementById('combinations-table-container').innerHTML = `<div class="notice">Error: ${error.message}</div>`;
-            });
+    // Load the combinations JSON file and display the table
+    fetch('combinations.json')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to load combinations.json');
+        }
+        return response.json();
+      })
+      .then(data => {
+        allowedCombinations = data;
+        displayCombinationsTable();
+        setInitialFormValues();
+      })
+      .catch(error => {
+        document.getElementById('combinations-table-container').innerHTML =
+          `<div class="notice">Error: ${error.message}</div>`;
+      });
 
-        // Function to display the combinations table
-        function displayCombinationsTable() {
-            const container = document.getElementById('combinations-table-container');
-            const table = document.createElement('table');
-            const headerRow = document.createElement('tr');
-            const agentHeader = document.createElement('th');
-            agentHeader.textContent = 'Number of Agents';
-            const densityHeader = document.createElement('th');
-            densityHeader.textContent = 'Allowed Densities';
-            headerRow.appendChild(agentHeader);
-            headerRow.appendChild(densityHeader);
-            table.appendChild(headerRow);
+    // Function to display the combinations table
+    function displayCombinationsTable() {
+      const container = document.getElementById('combinations-table-container');
+      const table = document.createElement('table');
+      const headerRow = document.createElement('tr');
+      const agentHeader = document.createElement('th');
+      agentHeader.textContent = 'Number of Agents';
+      const densityHeader = document.createElement('th');
+      densityHeader.textContent = 'Allowed Densities';
+      headerRow.appendChild(agentHeader);
+      headerRow.appendChild(densityHeader);
+      table.appendChild(headerRow);
 
-            for (const [agents, densities] of Object.entries(allowedCombinations)) {
-                const row = document.createElement('tr');
-                const agentCell = document.createElement('td');
-                agentCell.textContent = agents;
-                const densityCell = document.createElement('td');
-                densityCell.textContent = densities.join(', ');
-                row.appendChild(agentCell);
-                row.appendChild(densityCell);
-                table.appendChild(row);
+      for (const [agents, densities] of Object.entries(allowedCombinations)) {
+        const row = document.createElement('tr');
+        const agentCell = document.createElement('td');
+        agentCell.textContent = agents;
+        const densityCell = document.createElement('td');
+        densityCell.textContent = densities.join(', ');
+        row.appendChild(agentCell);
+        row.appendChild(densityCell);
+        table.appendChild(row);
+      }
+
+      container.appendChild(table);
+    }
+
+    // Set initial form values based on the first valid combination
+    function setInitialFormValues() {
+      const initialAgents = Object.keys(allowedCombinations)[0];
+      document.getElementById('agents').value = initialAgents;
+      document.getElementById('density').value = allowedCombinations[initialAgents][0];
+    }
+
+    document.getElementById('simulation-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const agents = document.getElementById('agents').value;
+      const density = parseFloat(document.getElementById('density').value).toFixed(2);
+
+      const notice = document.getElementById('notice');
+      const carousel = document.getElementById('carousel');
+      const carouselImageLeft = document.getElementById('carousel-image-left');
+      const carouselImageRight = document.getElementById('carousel-image-right');
+      const agentName = document.getElementById('agent-name');
+      const carouselButtons = document.getElementById('carousel-buttons');
+
+      // Reset any previous content
+      notice.textContent = '';
+      carouselButtons.innerHTML = '';
+      carousel.style.display = 'none';
+      carouselImageLeft.src = '';
+      carouselImageRight.src = '';
+      agentName.textContent = '';
+
+      if (!allowedCombinations[agents]) {
+        notice.textContent = `Invalid number of agents. Allowed values: ${Object.keys(allowedCombinations).join(', ')}.`;
+        return;
+      }
+
+      if (!allowedCombinations[agents].includes(density)) {
+        notice.textContent = `Invalid density value for ${agents} agents. Allowed values: ${allowedCombinations[agents].join(', ')}.`;
+        return;
+      }
+
+      // Generate the folder name based on the input
+      const folderName = `agents_${agents}_dens_${density}`;
+
+      // We will store valid image pairs in this array:
+      // Each element = { index: i, mainPath: '...', topViewPath: '...' }
+      let imagePairs = [];
+
+      // Counters to track how many images have finished (success + error)
+      let loadedCount = 0;
+      let totalImagesToCheck = 50; // Modify as needed
+
+      // For each agent i, try to load both the main view and the top view
+      for (let i = 1; i <= totalImagesToCheck; i++) {
+        loadImagePair(i);
+      }
+
+      // Loads a pair (main view + top view) for a given agent i
+      function loadImagePair(i) {
+        const mainImagePath = `images/${folderName}/agent${i}.png`;
+        const topViewImagePath = `images_top_view/${folderName}/agent${i}.png`;
+
+        let mainImg = new Image();
+        let topViewImg = new Image();
+
+        let mainLoaded = false;
+        let topLoaded = false;
+        let mainError = false;
+        let topError = false;
+
+        mainImg.onload = () => {
+          mainLoaded = true;
+          checkPair();
+        };
+        mainImg.onerror = () => {
+          mainError = true;
+          checkPair();
+        };
+
+        topViewImg.onload = () => {
+          topLoaded = true;
+          checkPair();
+        };
+        topViewImg.onerror = () => {
+          topError = true;
+          checkPair();
+        };
+
+        // Start loading
+        mainImg.src = mainImagePath;
+        topViewImg.src = topViewImagePath;
+
+        // If both main and top are loaded, we add them as a pair
+        // If either fails, we skip this index
+        function checkPair() {
+          // Only run after both onload/onerror have fired
+          if ((mainLoaded || mainError) && (topLoaded || topError)) {
+            loadedCount++;
+            // If both images loaded successfully, add them
+            if (mainLoaded && topLoaded) {
+              imagePairs.push({
+                index: i,
+                mainPath: mainImagePath,
+                topViewPath: topViewImagePath
+              });
             }
+            // If we've tried all images, finalize
+            if (loadedCount === totalImagesToCheck) {
+              finalizePairs();
+            }
+          }
+        }
+      }
 
-            container.appendChild(table);
+      // Once all image attempts are done, display results if there are valid pairs
+      function finalizePairs() {
+        // Sort by the numeric index (agent1, agent2, etc.)
+        imagePairs.sort((a, b) => a.index - b.index);
+
+        if (imagePairs.length === 0) {
+          notice.textContent = 'No images found for the selected combination.';
+          return;
         }
 
-        // Set initial form values based on the first valid combination
-        function setInitialFormValues() {
-            const initialAgents = Object.keys(allowedCombinations)[0];
-            document.getElementById('agents').value = initialAgents;
-            document.getElementById('density').value = allowedCombinations[initialAgents][0];
-        }
+        // Show the first pair
+        displayPair(0);
+        buildImageButtons();
+      }
 
-        document.getElementById('simulation-form').addEventListener('submit', function(e) {
-            e.preventDefault();
+      // Show the pair at a given index
+      let currentIndex = 0;
+      function displayPair(index) {
+        carouselImageLeft.src = imagePairs[index].topViewPath;
+        carouselImageRight.src = imagePairs[index].mainPath;
+        agentName.textContent = 'Agent ' + imagePairs[index].index;
+        currentIndex = index;
+        carousel.style.display = 'block';
+      }
 
-            const agents = document.getElementById('agents').value;
-            const density = parseFloat(document.getElementById('density').value).toFixed(2);
-
-            const notice = document.getElementById('notice');
-            const carousel = document.getElementById('carousel');
-            const carouselImage = document.getElementById('carousel-image');
-            const agentName = document.getElementById('agent-name');
-            const carouselButtons = document.getElementById('carousel-buttons');
-            let currentImageIndex = 0;
-            let imageFiles = [];
-
-            if (!allowedCombinations[agents]) {
-                notice.textContent = `Invalid number of agents. Allowed values: ${Object.keys(allowedCombinations).join(', ')}.`;
-                carousel.style.display = 'none';
-                return;
-            }
-
-            if (!allowedCombinations[agents].includes(density)) {
-                notice.textContent = `Invalid density value for ${agents} agents. Allowed values: ${allowedCombinations[agents].join(', ')}.`;
-                carousel.style.display = 'none';
-                return;
-            }
-
-            notice.textContent = '';
-
-            // Generate the folder name based on the input
-            const folderName = `agents_${agents}_dens_${density}`;
-
-            // Load images with the naming convention (agentX.png)
-            let imageCount = 50; // Adjust this number based on expected number of images
-            let imagesFailed = 0;
-            let loadedImages = 0;
-
-            for (let i = 1; i <= imageCount; i++) {
-                const imgPath = `images/${folderName}/agent${i}.png`;
-
-                const img = new Image();
-                img.src = imgPath;
-                img.alt = `Agent ${i}`;
-
-                img.onload = function() {
-                    imageFiles.push({
-                        src: imgPath,
-                        name: img.alt
-                    });
-                    loadedImages++;
-
-                    // If all attempts (loaded+failed) are done, finalize
-                    if (loadedImages + imagesFailed === imageCount) {
-                        finalizeImages();
-                    }
-                };
-
-                img.onerror = function() {
-                    imagesFailed++;
-                    if (imagesFailed === imageCount) {
-                        // All images failed to load
-                        notice.textContent = 'No images found for the selected combination.';
-                        carousel.style.display = 'none';
-                    } else if (loadedImages + imagesFailed === imageCount && loadedImages > 0) {
-                        // Some images loaded, some failed, still finalize
-                        finalizeImages();
-                    }
-                };
-            }
-
-            function finalizeImages() {
-                // Sort images by agent number to ensure agent1 is on the left and the highest number on the right
-                imageFiles.sort((a,b) => {
-                    const aNum = parseInt(a.name.replace(/\D/g, ''), 10);
-                    const bNum = parseInt(b.name.replace(/\D/g, ''), 10);
-                    return aNum - bNum;
-                });
-
-                if (imageFiles.length > 0) {
-                    displayImage(0);
-                    buildImageButtons();
-                } else {
-                    notice.textContent = 'No images found for the selected combination.';
-                    carousel.style.display = 'none';
-                }
-            }
-
-            function displayImage(index) {
-                carouselImage.src = imageFiles[index].src;
-                agentName.textContent = imageFiles[index].name;
-                currentImageIndex = index;
-                carousel.style.display = 'block';
-            }
-
-            function buildImageButtons() {
-                carouselButtons.innerHTML = '';
-                for (let i = 0; i < imageFiles.length; i++) {
-                    const btn = document.createElement('button');
-                    btn.textContent = imageFiles[i].name;
-                    btn.addEventListener('click', () => displayImage(i));
-                    carouselButtons.appendChild(btn);
-                }
-            }
+      // Build a button for each pair
+      function buildImageButtons() {
+        carouselButtons.innerHTML = '';
+        imagePairs.forEach((pair, idx) => {
+          let btn = document.createElement('button');
+          btn.textContent = 'Agent ' + pair.index;
+          btn.addEventListener('click', () => displayPair(idx));
+          carouselButtons.appendChild(btn);
         });
+      }
+    });
 
-        // Function to load Pyodide and run the Python code
-        async function loadAndRunPython() {
-            // Initialize Pyodide
-            let pyodide = await loadPyodide();
-            // Load necessary Python packages
-            await pyodide.loadPackage(['matplotlib', 'numpy']);
+    // Function to load Pyodide and run the Python code
+    async function loadAndRunPython() {
+      // Initialize Pyodide
+      let pyodide = await loadPyodide();
+      // Load necessary Python packages
+      await pyodide.loadPackage(['matplotlib', 'numpy']);
 
-            // Fetch the Python script from the repository
-            let response = await fetch('plot_generator.py');
-            if (!response.ok) {
-                console.error('Failed to load script.py');
-                return;
-            }
-            let code = await response.text();
+      // Fetch the Python script from the repository
+      let response = await fetch('plot_generator.py');
+      if (!response.ok) {
+        console.error('Failed to load plot_generator.py');
+        return;
+      }
+      let code = await response.text();
 
-            // Run the Python code
-            await pyodide.runPythonAsync(code);
+      // Run the Python code
+      await pyodide.runPythonAsync(code);
 
-            // Get the base64 image data
-            let img_base64 = pyodide.globals.get('img_base64');
+      // Get the base64 image data
+      let img_base64 = pyodide.globals.get('img_base64');
 
-            // Create an image element and set its source
-            let img = document.createElement('img');
-            img.src = 'data:image/png;base64,' + img_base64;
+      // Create an image element and set its source
+      let img = document.createElement('img');
+      img.src = 'data:image/png;base64,' + img_base64;
 
-            // Append the image to the plot container
-            const plotContainer = document.getElementById('plot-container');
-            plotContainer.innerHTML = '';
-            plotContainer.appendChild(img);
-        }
+      // Append the image to the plot container
+      const plotContainer = document.getElementById('plot-container');
+      plotContainer.innerHTML = '';
+      plotContainer.appendChild(img);
+    }
 
-        // Call the function to load and run the Python code
-        document.getElementById('run-python-button').addEventListener('click', loadAndRunPython);
-    </script>
+    // Call the function to load and run the Python code
+    document.getElementById('run-python-button').addEventListener('click', loadAndRunPython);
+  </script>
 </body>
 </html>
-
