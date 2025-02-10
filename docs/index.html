@@ -77,8 +77,6 @@
       color: #555;
     }
   </style>
-  <!-- Include Pyodide -->
-  <script src="https://cdn.jsdelivr.net/pyodide/v0.24.0/full/pyodide.js"></script>
 </head>
 <body>
   <h1>Agent Simulation</h1>
@@ -107,10 +105,7 @@
     <div id="agent-name" class="agent-name"></div>
   </div>
 
-  <!-- Section to display the Python plot -->
-  <h2>Python Plot Example</h2>
-  <button id="run-python-button">Run Python Script</button>
-  <div id="plot-container"></div>
+
 
   <script>
     let allowedCombinations = {};
@@ -307,40 +302,6 @@
         });
       }
     });
-
-    // Function to load Pyodide and run the Python code
-    async function loadAndRunPython() {
-      // Initialize Pyodide
-      let pyodide = await loadPyodide();
-      // Load necessary Python packages
-      await pyodide.loadPackage(['matplotlib', 'numpy']);
-
-      // Fetch the Python script from the repository
-      let response = await fetch('plot_generator.py');
-      if (!response.ok) {
-        console.error('Failed to load plot_generator.py');
-        return;
-      }
-      let code = await response.text();
-
-      // Run the Python code
-      await pyodide.runPythonAsync(code);
-
-      // Get the base64 image data
-      let img_base64 = pyodide.globals.get('img_base64');
-
-      // Create an image element and set its source
-      let img = document.createElement('img');
-      img.src = 'data:image/png;base64,' + img_base64;
-
-      // Append the image to the plot container
-      const plotContainer = document.getElementById('plot-container');
-      plotContainer.innerHTML = '';
-      plotContainer.appendChild(img);
-    }
-
-    // Call the function to load and run the Python code
-    document.getElementById('run-python-button').addEventListener('click', loadAndRunPython);
   </script>
 </body>
 </html>
