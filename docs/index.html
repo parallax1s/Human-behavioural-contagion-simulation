@@ -8,21 +8,21 @@
     body {
       font-family: Arial, sans-serif;
       padding: 20px;
-      text-align: center; /* Center-align text */
+      text-align: center;
     }
     form, table, .carousel {
-      margin: 0 auto; /* Center the element */
+      margin: 0 auto;
     }
     label {
       display: block;
       margin-bottom: 8px;
     }
-    input[type="number"], input[type="submit"] {
+    input[type="number"], input[type="submit"], select {
       margin-bottom: 20px;
     }
     table {
-      width: auto; /* Let the table width adjust to its content */
-      margin: 20px auto; /* Center the table */
+      width: auto;
+      margin: 20px auto;
     }
     table, th, td {
       border: 1px solid #ccc;
@@ -76,13 +76,26 @@
       font-style: italic;
       color: #555;
     }
+    /* Optional styling for the bias display section */
+    #bias-display {
+      margin-top: 20px;
+      text-align: center;
+    }
+    #bias-display img,
+    #bias-display video {
+      max-width: 100%;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
   <h1>Agent Simulation</h1>
-  <div class="description">This tool allows you to simulate different behavioural contagion processes. Select your parameters below to see the results.</div>
+  <div class="description">
+    This tool allows you to simulate different behavioural contagion processes.
+    Select your parameters below to see the results.
+  </div>
 
-  <div id="combinations-table-container"></div> <!-- Table container for allowed combinations -->
+  <div id="combinations-table-container"></div>
 
   <form id="simulation-form">
     <label for="agents">Number of Agents:</label>
@@ -90,6 +103,15 @@
 
     <label for="density">Density:</label>
     <input type="number" id="density" name="density" step="0.001" min="0.80" max="1.20" required>
+
+    <label for="bias">Bias:</label>
+    <select id="bias" name="bias" required>
+      <option value="51/49">51/49</option>
+      <option value="60/40">60/40</option>
+      <option value="70/30">70/30</option>
+      <option value="80/20">80/20</option>
+      <option value="90/10">90/10</option>
+    </select>
     <br>
     <input type="submit" value="Generate">
   </form>
@@ -105,7 +127,15 @@
     <div id="agent-name" class="agent-name"></div>
   </div>
 
-
+  <!-- New Bias Display Section -->
+  <div id="bias-display" style="display: none;">
+    <h2>Bias Display</h2>
+    <img id="bias-picture" src="" alt="Bias Picture">
+    <video id="bias-video" controls>
+      <source src="" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+  </div>
 
   <script>
     let allowedCombinations = {};
@@ -160,13 +190,16 @@
       const initialAgents = Object.keys(allowedCombinations)[0];
       document.getElementById('agents').value = initialAgents;
       document.getElementById('density').value = allowedCombinations[initialAgents][0];
+      document.getElementById('bias').value = "51/49"; // Default bias value
     }
 
     document.getElementById('simulation-form').addEventListener('submit', function(e) {
       e.preventDefault();
 
       const agents = document.getElementById('agents').value;
-      const density = parseFloat(document.getElementById('density').value).toFixed(2);
+      // Ensure density has three decimal places
+      const density = parseFloat(document.getElementById('density').value).toFixed(3);
+      const biasValue = document.getElementById('bias').value;
 
       const notice = document.getElementById('notice');
       const carousel = document.getElementById('carousel');
@@ -174,42 +207,57 @@
       const carouselImageRight = document.getElementById('carousel-image-right');
       const agentName = document.getElementById('agent-name');
       const carouselButtons = document.getElementById('carousel-buttons');
+      const biasDisplay = document.getElementById('bias-display');
 
-      // Reset any previous content
+      // Reset previous content
       notice.textContent = '';
       carouselButtons.innerHTML = '';
       carousel.style.display = 'none';
       carouselImageLeft.src = '';
       carouselImageRight.src = '';
       agentName.textContent = '';
+      biasDisplay.style.display = 'none';
+      document.getElementById('bias-picture').src = '';
+      const biasVideoSource = document.getElementById('bias-video').querySelector('source');
+      biasVideoSource.src = '';
+      document.getElementById('bias-video').load();
 
       if (!allowedCombinations[agents]) {
         notice.textContent = `Invalid number of agents. Allowed values: ${Object.keys(allowedCombinations).join(', ')}.`;
         return;
       }
 
-      if (!allowedCombinations[agents].includes(density)) {
+      if (!allowedCombinations[agents].includes(parseFloat(density))) {
         notice.textContent = `Invalid density value for ${agents} agents. Allowed values: ${allowedCombinations[agents].join(', ')}.`;
         return;
       }
 
-      // Generate the folder name based on the input
+      // Generate the base folder name based on the input
       const folderName = `agents_${agents}_dens_${density}`;
 
-      // We will store valid image pairs in this array:
-      // Each element = { index: i, mainPath: '...', topViewPath: '...' }
+      // Construct the bias folder
+      // Assuming the folder naming convention is "blue_yellow_" followed by the bias value with '/' replaced by '_'
+      const formattedBias = biasValue.replace('/', '_');
+      const biasFolder = `${folderName}/blue_yellow_${formattedBias}`;
+
+      // Load bias picture and video
+      document.getElementById('bias-picture').src = `${biasFolder}/plot.png`;
+      biasVideoSource.src = `${biasFolder}/animation.mp4`;
+      document.getElementById('bias-video').load();
+      biasDisplay.style.display = 'block';
+
+      // For the agent images, we will store valid image pairs in this array:
       let imagePairs = [];
 
       // Counters to track how many images have finished (success + error)
       let loadedCount = 0;
       let totalImagesToCheck = 50; // Modify as needed
 
-      // For each agent i, try to load both the main view and the top view
+      // Try loading the main view and top view for each agent
       for (let i = 1; i <= totalImagesToCheck; i++) {
         loadImagePair(i);
       }
 
-      // Loads a pair (main view + top view) for a given agent i
       function loadImagePair(i) {
         const mainImagePath = `images/${folderName}/agent${i}.png`;
         const topViewImagePath = `images_top_view/${folderName}/agent${i}.png`;
@@ -240,17 +288,12 @@
           checkPair();
         };
 
-        // Start loading
         mainImg.src = mainImagePath;
         topViewImg.src = topViewImagePath;
 
-        // If both main and top are loaded, we add them as a pair
-        // If either fails, we skip this index
         function checkPair() {
-          // Only run after both onload/onerror have fired
           if ((mainLoaded || mainError) && (topLoaded || topError)) {
             loadedCount++;
-            // If both images loaded successfully, add them
             if (mainLoaded && topLoaded) {
               imagePairs.push({
                 index: i,
@@ -258,7 +301,6 @@
                 topViewPath: topViewImagePath
               });
             }
-            // If we've tried all images, finalize
             if (loadedCount === totalImagesToCheck) {
               finalizePairs();
             }
@@ -266,9 +308,7 @@
         }
       }
 
-      // Once all image attempts are done, display results if there are valid pairs
       function finalizePairs() {
-        // Sort by the numeric index (agent1, agent2, etc.)
         imagePairs.sort((a, b) => a.index - b.index);
 
         if (imagePairs.length === 0) {
@@ -276,12 +316,10 @@
           return;
         }
 
-        // Show the first pair
         displayPair(0);
         buildImageButtons();
       }
 
-      // Show the pair at a given index
       let currentIndex = 0;
       function displayPair(index) {
         carouselImageLeft.src = imagePairs[index].topViewPath;
@@ -291,7 +329,6 @@
         carousel.style.display = 'block';
       }
 
-      // Build a button for each pair
       function buildImageButtons() {
         carouselButtons.innerHTML = '';
         imagePairs.forEach((pair, idx) => {
@@ -305,3 +342,4 @@
   </script>
 </body>
 </html>
+
