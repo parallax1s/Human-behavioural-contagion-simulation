@@ -190,12 +190,8 @@
     function setInitialFormValues() {
       const initialAgents = Object.keys(allowedCombinations)[0];
       document.getElementById('agents').value = initialAgents;
-      const densities = allowedCombinations[initialAgents];
-      document.getElementById('density').value = densities[0];
-      // Dynamically set the min and max based on the allowed densities
-      document.getElementById('density').min = Math.min(...densities);
-      document.getElementById('density').max = Math.max(...densities);
-      document.getElementById('bias').value = "51/49"; // default bias value
+      document.getElementById('density').value = allowedCombinations[initialAgents][0];
+      document.getElementById('bias').value = "51/49"; // Default bias value
     }
 
     document.getElementById('simulation-form').addEventListener('submit', function(e) {
