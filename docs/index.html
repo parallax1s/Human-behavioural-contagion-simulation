@@ -213,8 +213,8 @@
       const biasFolder = `${folderName}/blue_yellow_${formattedBias}`;
 
       // Load bias picture and video using the /docs/ prefix
-      document.getElementById('bias-picture').src = `/docs/${biasFolder}/plot.png`;
-      biasVideoSource.src = `/docs/${biasFolder}/animation.mp4`;
+      document.getElementById('bias-picture').src = `/${biasFolder}/plot.png`;
+      biasVideoSource.src = `/${biasFolder}/animation.mp4`;
       document.getElementById('bias-video').load();
       biasDisplay.style.display = 'block';
 
@@ -229,8 +229,8 @@
       }
 
       function loadImagePair(i) {
-        const mainImagePath = `/docs/${folderName}/images/agent${i}.png`;
-        const topViewImagePath = `/docs/${folderName}/images_top_view/agent${i}.png`;
+        const mainImagePath = `/${folderName}/images/agent${i}.png`;
+        const topViewImagePath = `/${folderName}/images_top_view/agent${i}.png`;
 
         let mainImg = new Image();
         let topViewImg = new Image();
