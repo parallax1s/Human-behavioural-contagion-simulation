@@ -17,7 +17,7 @@
       display: block;
       margin-bottom: 8px;
     }
-    input[type="number"], input[type="submit"], select {
+    select, input[type="submit"] {
       margin-bottom: 20px;
     }
     table {
@@ -76,7 +76,7 @@
       font-style: italic;
       color: #555;
     }
-    /* Optional styling for the bias display section */
+    /* Styling for the bias display section */
     #bias-display {
       margin-top: 20px;
       text-align: center;
@@ -99,12 +99,11 @@
 
   <form id="simulation-form">
     <label for="agents">Number of Agents:</label>
-    <input type="number" id="agents" name="agents" min="18" max="100" step="1" required>
+    <select id="agents" name="agents" required></select>
 
     <label for="density">Density:</label>
-    <input type="number" id="density" name="density" step="0.001" required>
-        
-    
+    <select id="density" name="density" required></select>
+
     <label for="bias">Bias:</label>
     <select id="bias" name="bias" required>
       <option value="51/49">51/49</option>
@@ -128,7 +127,7 @@
     <div id="agent-name" class="agent-name"></div>
   </div>
 
-  <!-- New Bias Display Section -->
+  <!-- Bias Display Section -->
   <div id="bias-display" style="display: none;">
     <h2>Bias Display</h2>
     <img id="bias-picture" src="" alt="Bias Picture">
@@ -141,7 +140,7 @@
   <script>
     let allowedCombinations = {};
 
-    // Load the combinations JSON file and display the table
+    // Load allowed combinations from combinations.json
     fetch('combinations.json')
       .then(response => {
         if (!response.ok) {
@@ -152,6 +151,8 @@
       .then(data => {
         allowedCombinations = data;
         displayCombinationsTable();
+        populateAgentsSelect();
+        // Set initial values based on the first valid agent entry
         setInitialFormValues();
       })
       .catch(error => {
@@ -159,7 +160,7 @@
           `<div class="notice">Error: ${error.message}</div>`;
       });
 
-    // Function to display the combinations table
+    // Display the combinations table
     function displayCombinationsTable() {
       const container = document.getElementById('combinations-table-container');
       const table = document.createElement('table');
@@ -186,19 +187,50 @@
       container.appendChild(table);
     }
 
-    // Set initial form values based on the first valid combination
-    function setInitialFormValues() {
-      const initialAgents = Object.keys(allowedCombinations)[0];
-      document.getElementById('agents').value = initialAgents;
-      document.getElementById('density').value = allowedCombinations[initialAgents][0];
-      document.getElementById('bias').value = "51/49"; // Default bias value
+    // Populate the agents select based on allowed combinations
+    function populateAgentsSelect() {
+      const agentsSelect = document.getElementById('agents');
+      agentsSelect.innerHTML = '';
+      for (const agentKey in allowedCombinations) {
+        const option = document.createElement('option');
+        option.value = agentKey;
+        option.textContent = agentKey;
+        agentsSelect.appendChild(option);
+      }
     }
+
+    // Update the density select based on the selected agent count
+    function updateDensityOptions(selectedAgents) {
+      const densitySelect = document.getElementById('density');
+      densitySelect.innerHTML = '';
+      const densities = allowedCombinations[selectedAgents];
+      densities.forEach(d => {
+        const option = document.createElement('option');
+        option.value = d;
+        option.textContent = d;
+        densitySelect.appendChild(option);
+      });
+    }
+
+    // Set initial form values
+    function setInitialFormValues() {
+      const agentsSelect = document.getElementById('agents');
+      const initialAgents = agentsSelect.options[0].value;
+      agentsSelect.value = initialAgents;
+      updateDensityOptions(initialAgents);
+      document.getElementById('bias').value = "51/49"; // Default bias
+    }
+
+    // Update densities when agent count changes
+    document.getElementById('agents').addEventListener('change', function() {
+      updateDensityOptions(this.value);
+    });
 
     document.getElementById('simulation-form').addEventListener('submit', function(e) {
       e.preventDefault();
 
       const agents = document.getElementById('agents').value;
-      // Ensure density has three decimal places
+      // Ensure density is formatted to three decimal places
       const density = parseFloat(document.getElementById('density').value).toFixed(3);
       const biasValue = document.getElementById('bias').value;
 
@@ -223,21 +255,20 @@
       biasVideoSource.src = '';
       document.getElementById('bias-video').load();
 
+      // Check that selected values are valid (should be valid given dropdowns)
       if (!allowedCombinations[agents]) {
         notice.textContent = `Invalid number of agents. Allowed values: ${Object.keys(allowedCombinations).join(', ')}.`;
         return;
       }
-
       if (!allowedCombinations[agents].includes(parseFloat(density))) {
         notice.textContent = `Invalid density value for ${agents} agents. Allowed values: ${allowedCombinations[agents].join(', ')}.`;
         return;
       }
 
-      // Generate the base folder name based on the input
+      // Generate the base folder name using the selected values
       const folderName = `agents_${agents}_dens_${density}`;
 
-      // Construct the bias folder
-      // Assuming the folder naming convention is "blue_yellow_" followed by the bias value with '/' replaced by '_'
+      // Construct the bias folder using the formatted bias (replace '/' with '_')
       const formattedBias = biasValue.replace('/', '_');
       const biasFolder = `${folderName}/blue_yellow_${formattedBias}`;
 
@@ -247,14 +278,11 @@
       document.getElementById('bias-video').load();
       biasDisplay.style.display = 'block';
 
-      // For the agent images, we will store valid image pairs in this array:
+      // For agent images, store valid image pairs
       let imagePairs = [];
-
-      // Counters to track how many images have finished (success + error)
       let loadedCount = 0;
-      let totalImagesToCheck = 50; // Modify as needed
+      const totalImagesToCheck = 50; // Adjust as needed
 
-      // Try loading the main view and top view for each agent
       for (let i = 1; i <= totalImagesToCheck; i++) {
         loadImagePair(i);
       }
@@ -268,15 +296,12 @@
 
         let mainLoaded = false;
         let topLoaded = false;
-        let mainError = false;
-        let topError = false;
 
         mainImg.onload = () => {
           mainLoaded = true;
           checkPair();
         };
         mainImg.onerror = () => {
-          mainError = true;
           checkPair();
         };
 
@@ -285,7 +310,6 @@
           checkPair();
         };
         topViewImg.onerror = () => {
-          topError = true;
           checkPair();
         };
 
@@ -293,7 +317,7 @@
         topViewImg.src = topViewImagePath;
 
         function checkPair() {
-          if ((mainLoaded || mainError) && (topLoaded || topError)) {
+          if ((mainLoaded || mainImg.complete) && (topLoaded || topViewImg.complete)) {
             loadedCount++;
             if (mainLoaded && topLoaded) {
               imagePairs.push({
@@ -311,12 +335,10 @@
 
       function finalizePairs() {
         imagePairs.sort((a, b) => a.index - b.index);
-
         if (imagePairs.length === 0) {
           notice.textContent = 'No images found for the selected combination.';
           return;
         }
-
         displayPair(0);
         buildImageButtons();
       }
@@ -333,7 +355,7 @@
       function buildImageButtons() {
         carouselButtons.innerHTML = '';
         imagePairs.forEach((pair, idx) => {
-          let btn = document.createElement('button');
+          const btn = document.createElement('button');
           btn.textContent = 'Agent ' + pair.index;
           btn.addEventListener('click', () => displayPair(idx));
           carouselButtons.appendChild(btn);
@@ -343,4 +365,3 @@
   </script>
 </body>
 </html>
-
