@@ -126,7 +126,7 @@
   <script>
     let allowedCombinations = {};
 
-    // Load the combinations.json file and populate the agents dropdown
+    // Load combinations.json and populate the agents dropdown
     fetch('combinations.json')
       .then(response => {
         if (!response.ok) {
@@ -142,7 +142,7 @@
         document.getElementById('notice').textContent = `Error: ${error.message}`;
       });
 
-    // Populate the agents dropdown from the JSON keys
+    // Populate the agents dropdown with keys from combinations.json
     function populateAgentsDropdown() {
       const agentsSelect = document.getElementById('agents');
       agentsSelect.innerHTML = '';
@@ -156,7 +156,7 @@
       updateDensityDropdown();
     }
 
-    // Update the density dropdown based on selected agent count
+    // Update the density dropdown based on the selected agent count
     function updateDensityDropdown() {
       const agentsSelect = document.getElementById('agents');
       const densitySelect = document.getElementById('density');
@@ -170,7 +170,6 @@
       });
     }
 
-    // Update densities when the agent selection changes
     document.getElementById('agents').addEventListener('change', updateDensityDropdown);
 
     document.getElementById('simulation-form').addEventListener('submit', function(e) {
@@ -206,32 +205,32 @@
         return;
       }
 
-      // Generate the base folder name
-      const folderName = `agents_${agents}_dens_${density}`;
+      // Generate the base folder name (e.g., agents18_dens_2.357)
+      const folderName = `agents${agents}_dens_${density}`;
 
       // Format bias folder name (replace "/" with "_")
       const formattedBias = biasValue.replace('/', '_');
       const biasFolder = `${folderName}/blue_yellow_${formattedBias}`;
 
-      // Load bias picture and video
-      document.getElementById('bias-picture').src = `${biasFolder}/plot.png`;
-      biasVideoSource.src = `${biasFolder}/animation.mp4`;
+      // Load bias picture and video using the /docs/ prefix
+      document.getElementById('bias-picture').src = `/docs/${biasFolder}/plot.png`;
+      biasVideoSource.src = `/docs/${biasFolder}/animation.mp4`;
       document.getElementById('bias-video').load();
       biasDisplay.style.display = 'block';
 
-      // For agent images, store valid image pairs here
+      // For agent images, store valid image pairs
       let imagePairs = [];
       let loadedCount = 0;
       let totalImagesToCheck = 50;
 
-      // Try loading images for each agent
+      // Attempt to load images for each agent
       for (let i = 1; i <= totalImagesToCheck; i++) {
         loadImagePair(i);
       }
 
       function loadImagePair(i) {
-        const mainImagePath = `images/${folderName}/agent${i}.png`;
-        const topViewImagePath = `images_top_view/${folderName}/agent${i}.png`;
+        const mainImagePath = `/docs/${folderName}/images/agent${i}.png`;
+        const topViewImagePath = `/docs/${folderName}/images_top_view/agent${i}.png`;
 
         let mainImg = new Image();
         let topViewImg = new Image();
