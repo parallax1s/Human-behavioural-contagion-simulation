@@ -212,7 +212,11 @@
       const formattedBias = biasValue.replace('/', '_');
       const biasFolder = `${folderName}/blue_yellow_${formattedBias}`;
 
-      // Load bias picture and video using the /docs/ prefix
+      // Debug: log the computed folder paths
+      console.log("Base folder: ", folderName);
+      console.log("Bias folder: ", biasFolder);
+
+      // Use relative paths (without "/docs/") since index.html is in the docs folder
       document.getElementById('bias-picture').src = `${biasFolder}/plot.png`;
       biasVideoSource.src = `${biasFolder}/animation.mp4`;
       document.getElementById('bias-video').load();
@@ -232,6 +236,10 @@
         const mainImagePath = `${folderName}/images/agent${i}.png`;
         const topViewImagePath = `${folderName}/images_top_view/agent${i}.png`;
 
+        // Debug: log each image path being attempted
+        console.log(`Loading agent ${i} main image: ${mainImagePath}`);
+        console.log(`Loading agent ${i} top view image: ${topViewImagePath}`);
+
         let mainImg = new Image();
         let topViewImg = new Image();
 
@@ -243,6 +251,7 @@
           checkPair();
         };
         mainImg.onerror = () => {
+          console.error(`Failed to load ${mainImagePath}`);
           checkPair();
         };
 
@@ -251,6 +260,7 @@
           checkPair();
         };
         topViewImg.onerror = () => {
+          console.error(`Failed to load ${topViewImagePath}`);
           checkPair();
         };
 
@@ -258,6 +268,7 @@
         topViewImg.src = topViewImagePath;
 
         function checkPair() {
+          // Once both attempts have finished, increase counter and add pair if both loaded
           if ((mainLoaded || mainImg.complete) && (topLoaded || topViewImg.complete)) {
             loadedCount++;
             if (mainLoaded && topLoaded) {
