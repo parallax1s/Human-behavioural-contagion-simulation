@@ -30,7 +30,7 @@
       flex-direction: row;
       align-items: center;
       justify-content: center;
-      gap: 20px;
+      gap: 40px; /* Increased gap between images */
       max-width: 100%;
       margin-bottom: 10px;
     }
@@ -39,15 +39,15 @@
       max-height: 500px;
       display: block;
     }
-    .carousel-buttons {
+    #agent-controls {
       margin-top: 10px;
       display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 5px;
+      align-items: center;
+      gap: 10px;
     }
-    .carousel-buttons button {
-      padding: 5px 10px;
+    #agent-index-input {
+      width: 60px;
+      text-align: center;
     }
     .agent-name {
       margin-top: 10px;
@@ -110,14 +110,18 @@
       <img id="carousel-image-left" src="" alt="Top View" />
       <img id="carousel-image-right" src="" alt="Main View" />
     </div>
-    <div class="carousel-buttons" id="carousel-buttons"></div>
+    <div id="agent-controls">
+      <button id="prev-agent">&laquo; Previous</button>
+      <input type="number" id="agent-index-input" min="1" value="1">
+      <button id="next-agent">Next &raquo;</button>
+    </div>
     <div id="agent-name" class="agent-name"></div>
   </div>
 
   <div id="bias-display" style="display: none;">
     <h2>Bias Display</h2>
     <img id="bias-picture" src="" alt="Bias Picture">
-    <video id="bias-video" controls>
+    <video id="bias-video" autoplay loop muted>
       <source src="" type="video/mp4">
       Your browser does not support the video tag.
     </video>
@@ -125,6 +129,8 @@
 
   <script>
     let allowedCombinations = {};
+    let imagePairs = [];
+    let currentIndex = 0;
 
     // Load combinations.json and populate the agents dropdown
     fetch('combinations.json')
@@ -184,12 +190,11 @@
       const carouselImageLeft = document.getElementById('carousel-image-left');
       const carouselImageRight = document.getElementById('carousel-image-right');
       const agentName = document.getElementById('agent-name');
-      const carouselButtons = document.getElementById('carousel-buttons');
       const biasDisplay = document.getElementById('bias-display');
+      const agentIndexInput = document.getElementById('agent-index-input');
 
       // Reset previous content
       notice.textContent = '';
-      carouselButtons.innerHTML = '';
       carousel.style.display = 'none';
       carouselImageLeft.src = '';
       carouselImageRight.src = '';
@@ -199,6 +204,8 @@
       const biasVideoSource = document.getElementById('bias-video').querySelector('source');
       biasVideoSource.src = '';
       document.getElementById('bias-video').load();
+      imagePairs = [];
+      currentIndex = 0;
 
       if (!allowedCombinations[agents].includes(density)) {
         notice.textContent = `Invalid density value for ${agents} agents. Allowed values: ${allowedCombinations[agents].join(', ')}.`;
@@ -207,12 +214,10 @@
 
       // Generate the base folder name (e.g., agents18_dens_2.357)
       const folderName = `agents${agents}_dens_${density}`;
-
       // Format bias folder name (replace "/" with "_")
       const formattedBias = biasValue.replace('/', '_');
       const biasFolder = `${folderName}/blue_yellow_${formattedBias}`;
 
-      // Debug: log the computed folder paths
       console.log("Base folder: ", folderName);
       console.log("Bias folder: ", biasFolder);
 
@@ -222,13 +227,11 @@
       document.getElementById('bias-video').load();
       biasDisplay.style.display = 'block';
 
-      // For agent images, only check up to the selected number of agents
-      const totalImagesToCheck = parseInt(agents, 10);
-      let imagePairs = [];
-      let loadedCount = 0;
+      // Only load images up to the selected number of agents
+      const totalAgents = parseInt(agents, 10);
 
-      // Attempt to load images for each agent up to totalImagesToCheck
-      for (let i = 1; i <= totalImagesToCheck; i++) {
+      // Attempt to load images for each agent
+      for (let i = 1; i <= totalAgents; i++) {
         loadImagePair(i);
       }
 
@@ -236,13 +239,11 @@
         const mainImagePath = `${folderName}/images/agent${i}.png`;
         const topViewImagePath = `${folderName}/images_top_view/agent${i}.png`;
 
-        // Debug: log each image path being attempted
         console.log(`Loading agent ${i} main image: ${mainImagePath}`);
         console.log(`Loading agent ${i} top view image: ${topViewImagePath}`);
 
         let mainImg = new Image();
         let topViewImg = new Image();
-
         let mainLoaded = false;
         let topLoaded = false;
 
@@ -269,7 +270,6 @@
 
         function checkPair() {
           if ((mainLoaded || mainImg.complete) && (topLoaded || topViewImg.complete)) {
-            loadedCount++;
             if (mainLoaded && topLoaded) {
               imagePairs.push({
                 index: i,
@@ -277,7 +277,7 @@
                 topViewPath: topViewImagePath
               });
             }
-            if (loadedCount === totalImagesToCheck) {
+            if (imagePairs.length === totalAgents) {
               finalizePairs();
             }
           }
@@ -285,34 +285,62 @@
       }
 
       function finalizePairs() {
+        // Sort image pairs by index
         imagePairs.sort((a, b) => a.index - b.index);
         if (imagePairs.length === 0) {
           notice.textContent = 'No images found for the selected combination.';
           return;
         }
+        // Set the numeric input limits
+        agentIndexInput.min = 1;
+        agentIndexInput.max = imagePairs.length;
+        agentIndexInput.value = 1;
         displayPair(0);
-        buildImageButtons();
-      }
-
-      let currentIndex = 0;
-      function displayPair(index) {
-        carouselImageLeft.src = imagePairs[index].topViewPath;
-        carouselImageRight.src = imagePairs[index].mainPath;
-        agentName.textContent = 'Agent ' + imagePairs[index].index;
-        currentIndex = index;
-        carousel.style.display = 'block';
-      }
-
-      function buildImageButtons() {
-        carouselButtons.innerHTML = '';
-        imagePairs.forEach((pair, idx) => {
-          let btn = document.createElement('button');
-          btn.textContent = 'Agent ' + pair.index;
-          btn.addEventListener('click', () => displayPair(idx));
-          carouselButtons.appendChild(btn);
-        });
+        setupAgentControls();
       }
     });
+
+    function displayPair(index) {
+      const carouselImageLeft = document.getElementById('carousel-image-left');
+      const carouselImageRight = document.getElementById('carousel-image-right');
+      const agentName = document.getElementById('agent-name');
+      carouselImageLeft.src = imagePairs[index].topViewPath;
+      carouselImageRight.src = imagePairs[index].mainPath;
+      agentName.textContent = 'Agent ' + imagePairs[index].index;
+      currentIndex = index;
+      document.getElementById('carousel').style.display = 'block';
+      document.getElementById('agent-index-input').value = imagePairs[index].index;
+    }
+
+    function setupAgentControls() {
+      const prevBtn = document.getElementById('prev-agent');
+      const nextBtn = document.getElementById('next-agent');
+      const agentIndexInput = document.getElementById('agent-index-input');
+
+      prevBtn.onclick = () => {
+        let newIndex = parseInt(agentIndexInput.value, 10) - 1;
+        if (newIndex >= parseInt(agentIndexInput.min, 10)) {
+          displayPair(newIndex - 1);
+        }
+      };
+
+      nextBtn.onclick = () => {
+        let newIndex = parseInt(agentIndexInput.value, 10) + 1;
+        if (newIndex <= parseInt(agentIndexInput.max, 10)) {
+          displayPair(newIndex - 1);
+        }
+      };
+
+      agentIndexInput.onchange = () => {
+        let val = parseInt(agentIndexInput.value, 10);
+        if (val < parseInt(agentIndexInput.min, 10)) {
+          val = parseInt(agentIndexInput.min, 10);
+        } else if (val > parseInt(agentIndexInput.max, 10)) {
+          val = parseInt(agentIndexInput.max, 10);
+        }
+        displayPair(val - 1);
+      };
+    }
   </script>
 </body>
 </html>
