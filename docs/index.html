@@ -216,18 +216,18 @@
       console.log("Base folder: ", folderName);
       console.log("Bias folder: ", biasFolder);
 
-      // Use relative paths (without "/docs/") since index.html is in the docs folder
+      // Use relative paths since index.html is in the docs folder
       document.getElementById('bias-picture').src = `${biasFolder}/plot.png`;
       biasVideoSource.src = `${biasFolder}/animation.mp4`;
       document.getElementById('bias-video').load();
       biasDisplay.style.display = 'block';
 
-      // For agent images, store valid image pairs
+      // For agent images, only check up to the selected number of agents
+      const totalImagesToCheck = parseInt(agents, 10);
       let imagePairs = [];
       let loadedCount = 0;
-      let totalImagesToCheck = 50;
 
-      // Attempt to load images for each agent
+      // Attempt to load images for each agent up to totalImagesToCheck
       for (let i = 1; i <= totalImagesToCheck; i++) {
         loadImagePair(i);
       }
@@ -268,7 +268,6 @@
         topViewImg.src = topViewImagePath;
 
         function checkPair() {
-          // Once both attempts have finished, increase counter and add pair if both loaded
           if ((mainLoaded || mainImg.complete) && (topLoaded || topViewImg.complete)) {
             loadedCount++;
             if (mainLoaded && topLoaded) {
