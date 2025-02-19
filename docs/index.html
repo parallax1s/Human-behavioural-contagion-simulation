@@ -10,7 +10,7 @@
       padding: 20px;
       text-align: center;
     }
-    form, table, .carousel {
+    form, .carousel {
       margin: 0 auto;
     }
     label {
@@ -19,20 +19,6 @@
     }
     select, input[type="submit"] {
       margin-bottom: 20px;
-    }
-    table {
-      width: auto;
-      margin: 20px auto;
-    }
-    table, th, td {
-      border: 1px solid #ccc;
-    }
-    th, td {
-      padding: 8px;
-      text-align: left;
-    }
-    th {
-      background-color: #f4f4f4;
     }
     .carousel {
       display: flex;
@@ -76,7 +62,6 @@
       font-style: italic;
       color: #555;
     }
-    /* Styling for the bias display section */
     #bias-display {
       margin-top: 20px;
       text-align: center;
@@ -95,14 +80,16 @@
     Select your parameters below to see the results.
   </div>
 
-  <div id="combinations-table-container"></div>
-
   <form id="simulation-form">
     <label for="agents">Number of Agents:</label>
-    <select id="agents" name="agents" required></select>
+    <select id="agents" name="agents" required>
+      <!-- Options populated from combinations.json -->
+    </select>
 
     <label for="density">Density:</label>
-    <select id="density" name="density" required></select>
+    <select id="density" name="density" required>
+      <!-- Options populated based on selected agent count -->
+    </select>
 
     <label for="bias">Bias:</label>
     <select id="bias" name="bias" required>
@@ -127,7 +114,6 @@
     <div id="agent-name" class="agent-name"></div>
   </div>
 
-  <!-- Bias Display Section -->
   <div id="bias-display" style="display: none;">
     <h2>Bias Display</h2>
     <img id="bias-picture" src="" alt="Bias Picture">
@@ -140,7 +126,7 @@
   <script>
     let allowedCombinations = {};
 
-    // Load allowed combinations from combinations.json
+    // Load the combinations.json file and populate the agents dropdown
     fetch('combinations.json')
       .then(response => {
         if (!response.ok) {
@@ -150,88 +136,48 @@
       })
       .then(data => {
         allowedCombinations = data;
-        displayCombinationsTable();
-        populateAgentsSelect();
-        // Set initial values based on the first valid agent entry
-        setInitialFormValues();
+        populateAgentsDropdown();
       })
       .catch(error => {
-        document.getElementById('combinations-table-container').innerHTML =
-          `<div class="notice">Error: ${error.message}</div>`;
+        document.getElementById('notice').textContent = `Error: ${error.message}`;
       });
 
-    // Display the combinations table
-    function displayCombinationsTable() {
-      const container = document.getElementById('combinations-table-container');
-      const table = document.createElement('table');
-      const headerRow = document.createElement('tr');
-      const agentHeader = document.createElement('th');
-      agentHeader.textContent = 'Number of Agents';
-      const densityHeader = document.createElement('th');
-      densityHeader.textContent = 'Allowed Densities';
-      headerRow.appendChild(agentHeader);
-      headerRow.appendChild(densityHeader);
-      table.appendChild(headerRow);
-
-      for (const [agents, densities] of Object.entries(allowedCombinations)) {
-        const row = document.createElement('tr');
-        const agentCell = document.createElement('td');
-        agentCell.textContent = agents;
-        const densityCell = document.createElement('td');
-        densityCell.textContent = densities.join(', ');
-        row.appendChild(agentCell);
-        row.appendChild(densityCell);
-        table.appendChild(row);
-      }
-
-      container.appendChild(table);
-    }
-
-    // Populate the agents select based on allowed combinations
-    function populateAgentsSelect() {
+    // Populate the agents dropdown from the JSON keys
+    function populateAgentsDropdown() {
       const agentsSelect = document.getElementById('agents');
       agentsSelect.innerHTML = '';
-      for (const agentKey in allowedCombinations) {
-        const option = document.createElement('option');
-        option.value = agentKey;
-        option.textContent = agentKey;
+      Object.keys(allowedCombinations).forEach(agentCount => {
+        let option = document.createElement('option');
+        option.value = agentCount;
+        option.textContent = agentCount;
         agentsSelect.appendChild(option);
-      }
+      });
+      agentsSelect.value = Object.keys(allowedCombinations)[0];
+      updateDensityDropdown();
     }
 
-    // Update the density select based on the selected agent count
-    function updateDensityOptions(selectedAgents) {
+    // Update the density dropdown based on selected agent count
+    function updateDensityDropdown() {
+      const agentsSelect = document.getElementById('agents');
       const densitySelect = document.getElementById('density');
+      const selectedAgent = agentsSelect.value;
       densitySelect.innerHTML = '';
-      const densities = allowedCombinations[selectedAgents];
-      densities.forEach(d => {
-        const option = document.createElement('option');
-        option.value = d;
-        option.textContent = d;
+      allowedCombinations[selectedAgent].forEach(density => {
+        let option = document.createElement('option');
+        option.value = density;
+        option.textContent = density;
         densitySelect.appendChild(option);
       });
     }
 
-    // Set initial form values
-    function setInitialFormValues() {
-      const agentsSelect = document.getElementById('agents');
-      const initialAgents = agentsSelect.options[0].value;
-      agentsSelect.value = initialAgents;
-      updateDensityOptions(initialAgents);
-      document.getElementById('bias').value = "51/49"; // Default bias
-    }
-
-    // Update densities when agent count changes
-    document.getElementById('agents').addEventListener('change', function() {
-      updateDensityOptions(this.value);
-    });
+    // Update densities when the agent selection changes
+    document.getElementById('agents').addEventListener('change', updateDensityDropdown);
 
     document.getElementById('simulation-form').addEventListener('submit', function(e) {
       e.preventDefault();
 
       const agents = document.getElementById('agents').value;
-      // Ensure density is formatted to three decimal places
-      const density = parseFloat(document.getElementById('density').value).toFixed(3);
+      const density = document.getElementById('density').value;
       const biasValue = document.getElementById('bias').value;
 
       const notice = document.getElementById('notice');
@@ -255,20 +201,15 @@
       biasVideoSource.src = '';
       document.getElementById('bias-video').load();
 
-      // Check that selected values are valid (should be valid given dropdowns)
-      if (!allowedCombinations[agents]) {
-        notice.textContent = `Invalid number of agents. Allowed values: ${Object.keys(allowedCombinations).join(', ')}.`;
-        return;
-      }
-      if (!allowedCombinations[agents].includes(parseFloat(density))) {
+      if (!allowedCombinations[agents].includes(density)) {
         notice.textContent = `Invalid density value for ${agents} agents. Allowed values: ${allowedCombinations[agents].join(', ')}.`;
         return;
       }
 
-      // Generate the base folder name using the selected values
+      // Generate the base folder name
       const folderName = `agents_${agents}_dens_${density}`;
 
-      // Construct the bias folder using the formatted bias (replace '/' with '_')
+      // Format bias folder name (replace "/" with "_")
       const formattedBias = biasValue.replace('/', '_');
       const biasFolder = `${folderName}/blue_yellow_${formattedBias}`;
 
@@ -278,11 +219,12 @@
       document.getElementById('bias-video').load();
       biasDisplay.style.display = 'block';
 
-      // For agent images, store valid image pairs
+      // For agent images, store valid image pairs here
       let imagePairs = [];
       let loadedCount = 0;
-      const totalImagesToCheck = 50; // Adjust as needed
+      let totalImagesToCheck = 50;
 
+      // Try loading images for each agent
       for (let i = 1; i <= totalImagesToCheck; i++) {
         loadImagePair(i);
       }
@@ -355,7 +297,7 @@
       function buildImageButtons() {
         carouselButtons.innerHTML = '';
         imagePairs.forEach((pair, idx) => {
-          const btn = document.createElement('button');
+          let btn = document.createElement('button');
           btn.textContent = 'Agent ' + pair.index;
           btn.addEventListener('click', () => displayPair(idx));
           carouselButtons.appendChild(btn);
