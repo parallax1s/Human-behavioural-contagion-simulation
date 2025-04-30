@@ -10,28 +10,46 @@
       padding: 20px;
       text-align: center;
     }
+    /* Settings row: inline form controls */
+    #simulation-form {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    #simulation-form label {
+      display: flex;
+      flex-direction: column;
+      margin: 0;
+    }
+    #simulation-form select,
+    #simulation-form input[type="submit"] {
+      margin: 0;
+    }
+    /* Options row: checkboxes */
+    .options-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    .options-row label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-weight: normal;
+    }
     form, .carousel, .bias-container {
       margin: 0 auto;
     }
-    label {
-      display: block;
-      margin-bottom: 8px;
-    }
-    select, input[type="submit"] {
-      margin-bottom: 40px;
-    }
-    .carousel {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    /* New heading style above agent images */
     #agent-heading {
       margin-bottom: 5px;
       font-size: 1.8em;
       font-weight: bold;
     }
-    /* Description text above agent images */
     #agent-description {
       margin-bottom: 10px;
       font-style: italic;
@@ -42,17 +60,15 @@
       flex-direction: row;
       align-items: center;
       justify-content: center;
-      gap: 40px; /* Increased gap between images */
+      gap: 40px;
       max-width: 100%;
       margin-bottom: 10px;
     }
-    /* All media elements (images and video) have the same size */
     .media-item {
       width: 750px;
       height: 450px;
       object-fit: contain;
     }
-    /* Center the agent controls */
     #agent-controls {
       margin: 10px auto;
       display: flex;
@@ -78,7 +94,6 @@
       color: #555;
       text-align: center;
     }
-    /* Bias display: show image and video side by side */
     #bias-display {
       margin-top: 40px;
       text-align: center;
@@ -105,34 +120,40 @@
   </div>
 
   <form id="simulation-form">
-    <label for="agents">Number of Agents:</label>
-    <select id="agents" name="agents" required>
-      <!-- Options populated from combinations.json -->
-    </select>
+    <label for="agents">Number of Agents:
+      <select id="agents" name="agents" required>
+        <!-- Options populated from combinations.json -->
+      </select>
+    </label>
 
-    <label for="density">Density:</label>
-    <select id="density" name="density" required>
-      <!-- Options populated based on selected agent count -->
-    </select>
+    <label for="density">Density:
+      <select id="density" name="density" required>
+        <!-- Options populated based on selected agent count -->
+      </select>
+    </label>
 
-    <label for="bias">Bias:</label>
-    <select id="bias" name="bias" required>
-      <option value="51/49">51/49</option>
-      <option value="60/40">60/40</option>
-      <option value="70/30">70/30</option>
-      <option value="80/20">80/20</option>
-      <option value="90/10">90/10</option>
-    </select>
-    <br>
-    <input type="submit" value="Generate">
+    <label for="bias">Environmental cue:
+      <select id="bias" name="bias" required>
+        <option value="51/49">51/49</option>
+        <option value="60/40">60/40</option>
+        <option value="70/30">70/30</option>
+        <option value="80/20">80/20</option>
+        <option value="90/10">90/10</option>
+      </select>
+    </label>
+
+    <input type="submit" value="Generate" />
   </form>
+
+  <div class="options-row">
+    <label><input type="checkbox" id="toggle-images" checked /> Show Top View and Field of View Images</label>
+    <label><input type="checkbox" id="toggle-bias" checked /> Show Video and Plot</label>
+  </div>
 
   <div id="notice" class="notice"></div>
 
   <div class="carousel" id="carousel" style="display: none;">
-    <!-- New heading above agent images -->
     <div id="agent-heading">Agent Images</div>
-    <!-- Description above agent images -->
     <div id="agent-description" class="description">
       Placeholder description text for agent images.
     </div>
@@ -140,10 +161,9 @@
       <img id="carousel-image-left" src="" alt="Top View" class="media-item" />
       <img id="carousel-image-right" src="" alt="Main View" class="media-item" />
     </div>
-    <!-- Centered agent controls -->
     <div id="agent-controls">
       <button id="prev-agent">&laquo; Previous</button>
-      <input type="number" id="agent-index-input" min="1" value="1">
+      <input type="number" id="agent-index-input" min="1" value="1" />
       <button id="next-agent">Next &raquo;</button>
     </div>
     <div id="agent-name" class="agent-name"></div>
@@ -151,12 +171,11 @@
 
   <div id="bias-display" style="display: none;">
     <h2>Bias Display</h2>
-    <!-- Description above the bias display -->
     <div class="description">Placeholder description text for bias display.</div>
     <div class="bias-container">
-      <img id="bias-picture" src="" alt="Bias Picture" class="media-item">
+      <img id="bias-picture" src="" alt="Bias Picture" class="media-item" />
       <video id="bias-video" autoplay loop muted class="media-item">
-        <source src="" type="video/mp4">
+        <source src="" type="video/mp4" />
         Your browser does not support the video tag.
       </video>
     </div>
@@ -167,12 +186,10 @@
     let imagePairs = [];
     let currentIndex = 0;
 
-    // Load combinations.json and populate the agents dropdown
+    // Load combinations.json
     fetch('combinations.json')
       .then(response => {
-        if (!response.ok) {
-          throw new Error('Failed to load combinations.json');
-        }
+        if (!response.ok) throw new Error('Failed to load combinations.json');
         return response.json();
       })
       .then(data => {
@@ -183,12 +200,11 @@
         document.getElementById('notice').textContent = `Error: ${error.message}`;
       });
 
-    // Populate the agents dropdown with keys from combinations.json
     function populateAgentsDropdown() {
       const agentsSelect = document.getElementById('agents');
       agentsSelect.innerHTML = '';
       Object.keys(allowedCombinations).forEach(agentCount => {
-        let option = document.createElement('option');
+        const option = document.createElement('option');
         option.value = agentCount;
         option.textContent = agentCount;
         agentsSelect.appendChild(option);
@@ -197,14 +213,13 @@
       updateDensityDropdown();
     }
 
-    // Update the density dropdown based on the selected agent count
     function updateDensityDropdown() {
       const agentsSelect = document.getElementById('agents');
       const densitySelect = document.getElementById('density');
       const selectedAgent = agentsSelect.value;
       densitySelect.innerHTML = '';
       allowedCombinations[selectedAgent].forEach(density => {
-        let option = document.createElement('option');
+        const option = document.createElement('option');
         option.value = density;
         option.textContent = density;
         densitySelect.appendChild(option);
@@ -216,27 +231,29 @@
     document.getElementById('simulation-form').addEventListener('submit', function(e) {
       e.preventDefault();
 
+      const showImages = document.getElementById('toggle-images').checked;
+      const showBiasOption = document.getElementById('toggle-bias').checked;
       const agents = document.getElementById('agents').value;
       const density = document.getElementById('density').value;
       const biasValue = document.getElementById('bias').value;
 
       const notice = document.getElementById('notice');
       const carousel = document.getElementById('carousel');
+      const biasDisplay = document.getElementById('bias-display');
       const carouselImageLeft = document.getElementById('carousel-image-left');
       const carouselImageRight = document.getElementById('carousel-image-right');
+      const biasPicture = document.getElementById('bias-picture');
+      const biasVideoSource = document.getElementById('bias-video').querySelector('source');
       const agentName = document.getElementById('agent-name');
-      const biasDisplay = document.getElementById('bias-display');
       const agentIndexInput = document.getElementById('agent-index-input');
 
       // Reset previous content
       notice.textContent = '';
       carousel.style.display = 'none';
+      biasDisplay.style.display = 'none';
       carouselImageLeft.src = '';
       carouselImageRight.src = '';
-      agentName.textContent = '';
-      biasDisplay.style.display = 'none';
-      document.getElementById('bias-picture').src = '';
-      const biasVideoSource = document.getElementById('bias-video').querySelector('source');
+      biasPicture.src = '';
       biasVideoSource.src = '';
       document.getElementById('bias-video').load();
       imagePairs = [];
@@ -247,58 +264,39 @@
         return;
       }
 
-      // Generate the base folder name (e.g., agents18_dens_2.357)
       const folderName = `agents${agents}_dens_${density}`;
-      // Format bias folder name (replace "/" with "_")
       const formattedBias = biasValue.replace('/', '_');
       const biasFolder = `${folderName}/blue_yellow_${formattedBias}`;
 
-      console.log("Base folder: ", folderName);
-      console.log("Bias folder: ", biasFolder);
+      // Show bias display if checked
+      if (showBiasOption) {
+        biasPicture.src = `${biasFolder}/plot.png`;
+        biasVideoSource.src = `${biasFolder}/animation.mp4`;
+        document.getElementById('bias-video').load();
+        biasDisplay.style.display = 'block';
+      }
 
-      // Use relative paths since index.html is in the docs folder
-      document.getElementById('bias-picture').src = `${biasFolder}/plot.png`;
-      biasVideoSource.src = `${biasFolder}/animation.mp4`;
-      document.getElementById('bias-video').load();
-      biasDisplay.style.display = 'block';
-
-      // Only load images up to the selected number of agents
-      const totalAgents = parseInt(agents, 10);
-
-      // Attempt to load images for each agent
-      for (let i = 1; i <= totalAgents; i++) {
-        loadImagePair(i);
+      // Show images if checked
+      if (showImages) {
+        const totalAgents = parseInt(agents, 10);
+        for (let i = 1; i <= totalAgents; i++) {
+          loadImagePair(i);
+        }
       }
 
       function loadImagePair(i) {
         const mainImagePath = `${folderName}/images/agent${i}.png`;
         const topViewImagePath = `${folderName}/images_top_view/agent${i}.png`;
 
-        console.log(`Loading agent ${i} main image: ${mainImagePath}`);
-        console.log(`Loading agent ${i} top view image: ${topViewImagePath}`);
-
         let mainImg = new Image();
         let topViewImg = new Image();
         let mainLoaded = false;
         let topLoaded = false;
 
-        mainImg.onload = () => {
-          mainLoaded = true;
-          checkPair();
-        };
-        mainImg.onerror = () => {
-          console.error(`Failed to load ${mainImagePath}`);
-          checkPair();
-        };
-
-        topViewImg.onload = () => {
-          topLoaded = true;
-          checkPair();
-        };
-        topViewImg.onerror = () => {
-          console.error(`Failed to load ${topViewImagePath}`);
-          checkPair();
-        };
+        mainImg.onload = () => { mainLoaded = true; checkPair(); };
+        mainImg.onerror = () => { console.error(`Failed to load ${mainImagePath}`); checkPair(); };
+        topViewImg.onload = () => { topLoaded = true; checkPair(); };
+        topViewImg.onerror = () => { console.error(`Failed to load ${topViewImagePath}`); checkPair(); };
 
         mainImg.src = mainImagePath;
         topViewImg.src = topViewImagePath;
@@ -306,13 +304,9 @@
         function checkPair() {
           if ((mainLoaded || mainImg.complete) && (topLoaded || topViewImg.complete)) {
             if (mainLoaded && topLoaded) {
-              imagePairs.push({
-                index: i,
-                mainPath: mainImagePath,
-                topViewPath: topViewImagePath
-              });
+              imagePairs.push({ index: i, mainPath: mainImagePath, topViewPath: topViewImagePath });
             }
-            if (imagePairs.length === totalAgents) {
+            if (imagePairs.length === parseInt(agents, 10)) {
               finalizePairs();
             }
           }
@@ -320,13 +314,11 @@
       }
 
       function finalizePairs() {
-        // Sort image pairs by index
         imagePairs.sort((a, b) => a.index - b.index);
         if (imagePairs.length === 0) {
           notice.textContent = 'No images found for the selected combination.';
           return;
         }
-        // Set the numeric input limits
         agentIndexInput.min = 1;
         agentIndexInput.max = imagePairs.length;
         agentIndexInput.value = 1;
@@ -354,25 +346,16 @@
 
       prevBtn.onclick = () => {
         let newIndex = parseInt(agentIndexInput.value, 10) - 1;
-        if (newIndex >= parseInt(agentIndexInput.min, 10)) {
-          displayPair(newIndex - 1);
-        }
+        if (newIndex >= parseInt(agentIndexInput.min, 10)) displayPair(newIndex - 1);
       };
-
       nextBtn.onclick = () => {
         let newIndex = parseInt(agentIndexInput.value, 10) + 1;
-        if (newIndex <= parseInt(agentIndexInput.max, 10)) {
-          displayPair(newIndex - 1);
-        }
+        if (newIndex <= parseInt(agentIndexInput.max, 10)) displayPair(newIndex - 1);
       };
-
       agentIndexInput.onchange = () => {
         let val = parseInt(agentIndexInput.value, 10);
-        if (val < parseInt(agentIndexInput.min, 10)) {
-          val = parseInt(agentIndexInput.min, 10);
-        } else if (val > parseInt(agentIndexInput.max, 10)) {
-          val = parseInt(agentIndexInput.max, 10);
-        }
+        if (val < parseInt(agentIndexInput.min, 10)) val = parseInt(agentIndexInput.min, 10);
+        else if (val > parseInt(agentIndexInput.max, 10)) val = parseInt(agentIndexInput.max, 10);
         displayPair(val - 1);
       };
     }
