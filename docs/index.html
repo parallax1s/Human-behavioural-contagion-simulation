@@ -9,7 +9,6 @@
       font-family: Arial, sans-serif;
       padding: 20px;
       text-align: center;
-      
     }
     /* Settings row: inline form controls */
     #simulation-form {
@@ -71,6 +70,17 @@
       width: 750px;
       height: 450px;
       object-fit: contain;
+      border: 1px solid #000; /* Rahmen um Agent POV */
+    }
+    .unity-image-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .unity-image-container img {
+      max-width: 100%;
+      height: auto;
+      border: 1px solid #000; /* Rahmen um Unity-Bild */
     }
     #agent-controls {
       margin: 10px auto;
@@ -113,6 +123,15 @@
     .bias-container video {
       max-width: 100%;
     }
+    /* Neuer VR-Setup Bereich */
+    #vr-setup {
+      display: none;
+      margin-bottom: 20px;
+    }
+    #vr-setup video {
+      max-width: 100%;
+      height: auto;
+    }
   </style>
 </head>
 <body>
@@ -151,14 +170,28 @@
   <div class="options-row">
     <label><input type="checkbox" id="toggle-images" checked /> Show scenery</label>
     <label><input type="checkbox" id="toggle-bias" checked /> Show Analysis</label>
+    <label><input type="checkbox" id="toggle-vr" checked /> Show VR Setup</label>
   </div>
 
   <div id="notice" class="notice"></div>
+
+  <!-- Neuer VR-Setup Bereich -->
+  <div id="vr-setup">
+    <h2>VR setup</h2>
+    <video id="vr-video" autoplay loop muted>
+      <source src="docs/full_scene/full_scene.mp4" type="video/mp4" />
+      Your browser does not support the video tag.
+    </video>
+  </div>
 
   <div class="carousel" id="carousel" style="display: none;">
     <div id="agent-heading">Agent Images</div>
     <div id="agent-description" class="description">
       Placeholder description text for agent images.
+    </div>
+    <!-- Neue Unity-Ansicht -->
+    <div class="unity-image-container">
+      <img id="unity-image" src="" alt="Unity Top View" />
     </div>
     <div class="image-container">
       <img id="carousel-image-left" src="" alt="Top View" class="media-item" />
@@ -186,8 +219,8 @@
 
   <script>
     let allowedCombinations = {};
-    let imagePairs = [];
-    let currentIndex = 0;
+    let imagePairs = [], currentIndex = 0;
+    let unityImagePath = '';
 
     // Load combinations.json
     fetch('combinations.json')
@@ -236,6 +269,7 @@
 
       const showImages = document.getElementById('toggle-images').checked;
       const showBiasOption = document.getElementById('toggle-bias').checked;
+      const showVR = document.getElementById('toggle-vr').checked;
       const agents = document.getElementById('agents').value;
       const density = document.getElementById('density').value;
       const biasValue = document.getElementById('bias').value;
@@ -243,10 +277,12 @@
       const notice = document.getElementById('notice');
       const carousel = document.getElementById('carousel');
       const biasDisplay = document.getElementById('bias-display');
+      const vrSetup = document.getElementById('vr-setup');
       const carouselImageLeft = document.getElementById('carousel-image-left');
       const carouselImageRight = document.getElementById('carousel-image-right');
       const biasPicture = document.getElementById('bias-picture');
       const biasVideoSource = document.getElementById('bias-video').querySelector('source');
+      const unityImgEl = document.getElementById('unity-image');
       const agentName = document.getElementById('agent-name');
       const agentIndexInput = document.getElementById('agent-index-input');
 
@@ -254,11 +290,14 @@
       notice.textContent = '';
       carousel.style.display = 'none';
       biasDisplay.style.display = 'none';
+      vrSetup.style.display = 'none';
       carouselImageLeft.src = '';
       carouselImageRight.src = '';
       biasPicture.src = '';
       biasVideoSource.src = '';
+      unityImgEl.src = '';
       document.getElementById('bias-video').load();
+      document.getElementById('vr-video').load();
       imagePairs = [];
       currentIndex = 0;
 
@@ -271,6 +310,11 @@
       const formattedBias = biasValue.replace('/', '_');
       const biasFolder = `${folderName}/blue_yellow_${formattedBias}`;
 
+      // Show VR setup if checked
+      if (showVR) {
+        vrSetup.style.display = 'block';
+      }
+
       // Show bias display if checked
       if (showBiasOption) {
         biasPicture.src = `${biasFolder}/plot.png`;
@@ -279,8 +323,22 @@
         biasDisplay.style.display = 'block';
       }
 
-      // Show images if checked
+      // Prepare Unity image (einzelnes PNG in images_top_view_unity)
       if (showImages) {
+        // Versuche, Verzeichnislisting zu parsen (funktioniert nur, wenn Server es erlaubt)
+        fetch(`${folderName}/images_top_view_unity/`)
+          .then(resp => resp.text())
+          .then(html => {
+            const match = html.match(/href="([^"]+\.png)"/i);
+            if (match) {
+              unityImagePath = `${folderName}/images_top_view_unity/${match[1]}`;
+              unityImgEl.src = unityImagePath;
+            }
+          })
+          .catch(() => {
+            console.warn('Unable to fetch unity image directory listing.');
+          });
+
         const totalAgents = parseInt(agents, 10);
         for (let i = 1; i <= totalAgents; i++) {
           loadImagePair(i);
@@ -333,6 +391,7 @@
     function displayPair(index) {
       const carouselImageLeft = document.getElementById('carousel-image-left');
       const carouselImageRight = document.getElementById('carousel-image-right');
+      const unityImgEl = document.getElementById('unity-image');
       const agentName = document.getElementById('agent-name');
       carouselImageLeft.src = imagePairs[index].topViewPath;
       carouselImageRight.src = imagePairs[index].mainPath;
