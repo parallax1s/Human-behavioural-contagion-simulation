@@ -70,7 +70,7 @@
       width: 750px;
       height: 450px;
       object-fit: contain;
-      border: 1px solid #000; /* Rahmen um Agent POV */
+      border: 1px solid #000;
     }
     .unity-image-container {
       display: flex;
@@ -80,7 +80,7 @@
     .unity-image-container img {
       max-width: 100%;
       height: auto;
-      border: 1px solid #000; /* Rahmen um Unity-Bild */
+      border: 1px solid #000;
     }
     #agent-controls {
       margin: 10px auto;
@@ -179,7 +179,7 @@
   <div id="vr-setup">
     <h2>VR setup</h2>
     <video id="vr-video" autoplay loop muted>
-      <source src="docs/full_scene/full_scene.mp4" type="video/mp4" />
+      <source src="https://github.com/FabioReeh/Human-behavioural-contagion-simulation/blob/main/docs/full_scene/full_scene.mp4" type="video/mp4" />
       Your browser does not support the video tag.
     </video>
   </div>
@@ -219,8 +219,8 @@
 
   <script>
     let allowedCombinations = {};
-    let imagePairs = [], currentIndex = 0;
-    let unityImagePath = '';
+    let imagePairs = [];
+    let currentIndex = 0;
 
     // Load combinations.json
     fetch('combinations.json')
@@ -323,22 +323,13 @@
         biasDisplay.style.display = 'block';
       }
 
-      // Prepare Unity image (einzelnes PNG in images_top_view_unity)
+      // Unity-Bild fest setzen
       if (showImages) {
-        // Versuche, Verzeichnislisting zu parsen (funktioniert nur, wenn Server es erlaubt)
-        fetch(`${folderName}/images_top_view_unity/`)
-          .then(resp => resp.text())
-          .then(html => {
-            const match = html.match(/href="([^"]+\.png)"/i);
-            if (match) {
-              unityImagePath = `${folderName}/images_top_view_unity/${match[1]}`;
-              unityImgEl.src = unityImagePath;
-            }
-          })
-          .catch(() => {
-            console.warn('Unable to fetch unity image directory listing.');
-          });
+        unityImgEl.src = `${folderName}/images_top_view_unity/top_view.png`;
+      }
 
+      // Agenten-Bilder laden
+      if (showImages) {
         const totalAgents = parseInt(agents, 10);
         for (let i = 1; i <= totalAgents; i++) {
           loadImagePair(i);
@@ -391,7 +382,6 @@
     function displayPair(index) {
       const carouselImageLeft = document.getElementById('carousel-image-left');
       const carouselImageRight = document.getElementById('carousel-image-right');
-      const unityImgEl = document.getElementById('unity-image');
       const agentName = document.getElementById('agent-name');
       carouselImageLeft.src = imagePairs[index].topViewPath;
       carouselImageRight.src = imagePairs[index].mainPath;
