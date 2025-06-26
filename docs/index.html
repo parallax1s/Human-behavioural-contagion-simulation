@@ -319,9 +319,8 @@
       const folderName = `agents${agents}_dens_${density}`;
       // formattedBiasImg ohne Slash, z.B. "5545"
       const formattedBiasImg = biasValue.replace('/', '');
-      const biasFolder = `${folderName}/blue_yellow_${formattedBiasImg}`;
 
-      // Show VR setup if checked, set source and load
+      // Show VR setup if checked
       if (showVR) {
         vrSource.src = 'https://raw.githubusercontent.com/FabioReeh/Human-behavioural-contagion-simulation/main/docs/full_scene/full_scene.mp4';
         document.getElementById('vr-video').load();
@@ -330,8 +329,8 @@
 
       // Show bias display if checked
       if (showBiasOption) {
-        biasPicture.src = `${biasFolder}/plot.png`;
-        biasSource.src = `${biasFolder}/animation.mp4`;
+        biasPicture.src = `${folderName}/blue_yellow_${formattedBiasImg}/plot.png`;
+        biasSource.src = `${folderName}/blue_yellow_${formattedBiasImg}/animation.mp4`;
         document.getElementById('bias-video').load();
         biasDisplay.style.display = 'block';
       }
