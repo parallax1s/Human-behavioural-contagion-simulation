@@ -74,6 +74,8 @@
     .unity-image-container {
       display: flex;
       justify-content: center;
+      align-items: center;
+      gap: 20px;
       margin-bottom: 20px;
     }
     /* Nur Unity top_view.png rahmen */
@@ -81,6 +83,11 @@
       max-width: 100%;
       height: auto;
       border: 1px solid #000;
+    }
+    /* Env-cue Bild kein Rahmen */
+    #env-cue-image {
+      max-width: 100%;
+      height: auto;
     }
     #agent-controls {
       margin: 10px auto;
@@ -122,13 +129,6 @@
     .bias-container video {
       max-width: 100%;
       height: auto;
-    }
-    /* Env cue image, kein Rahmen */
-    .env-cue-img {
-      max-width: 300px;
-      height: auto;
-      border: none;
-      margin-bottom: 20px;
     }
     /* Neuer VR-Setup Bereich */
     #vr-setup {
@@ -180,7 +180,7 @@
 
   <div id="notice" class="notice"></div>
 
-  <!-- VR-Setup Bereich -->
+  <!-- Neuer VR-Setup Bereich -->
   <div id="vr-setup">
     <h2>VR setup</h2>
     <video id="vr-video" autoplay loop muted>
@@ -194,9 +194,10 @@
     <div id="agent-description" class="description">
       Placeholder description text for agent images.
     </div>
-    <!-- Unity top-view -->
+    <!-- Unity + Env-Cue Ansicht -->
     <div class="unity-image-container">
       <img id="unity-image" src="" alt="Unity Top View" />
+      <img id="env-cue-image" src="" alt="Environmental Cue" />
     </div>
     <div class="image-container">
       <img id="carousel-image-left" src="" alt="Top View" class="media-item" />
@@ -212,8 +213,6 @@
 
   <div id="bias-display" style="display: none;">
     <h2>Bias Display</h2>
-    <!-- Environmental cue image -->
-    <img id="env-cue-img" class="env-cue-img" src="" alt="Environmental Cue" style="display:none;" />
     <div class="description">Placeholder description text for bias display.</div>
     <div class="bias-container">
       <img id="bias-picture" src="" alt="Bias Picture" class="media-item" />
@@ -291,7 +290,7 @@
       const biasSource = document.getElementById('bias-source');
       const vrSource = document.getElementById('vr-source');
       const unityImgEl = document.getElementById('unity-image');
-      const envCueImg = document.getElementById('env-cue-img');
+      const envCueImg = document.getElementById('env-cue-image');
       const agentName = document.getElementById('agent-name');
       const agentIndexInput = document.getElementById('agent-index-input');
 
@@ -307,7 +306,6 @@
       vrSource.src = '';
       unityImgEl.src = '';
       envCueImg.src = '';
-      envCueImg.style.display = 'none';
       document.getElementById('bias-video').load();
       document.getElementById('vr-video').load();
       imagePairs = [];
@@ -319,10 +317,11 @@
       }
 
       const folderName = `agents${agents}_dens_${density}`;
-      const formattedBias = biasValue.replace('/', '_');
-      const biasFolder = `${folderName}/blue_yellow_${formattedBias}`;
+      // formattedBiasImg ohne Slash, z.B. "5545"
+      const formattedBiasImg = biasValue.replace('/', '');
+      const biasFolder = `${folderName}/blue_yellow_${formattedBiasImg}`;
 
-      // Show VR setup if checked
+      // Show VR setup if checked, set source and load
       if (showVR) {
         vrSource.src = 'https://raw.githubusercontent.com/FabioReeh/Human-behavioural-contagion-simulation/main/docs/full_scene/full_scene.mp4';
         document.getElementById('vr-video').load();
@@ -331,23 +330,19 @@
 
       // Show bias display if checked
       if (showBiasOption) {
-        // Env cue image
-        const envFile = biasValue.replace('/', '');
-        envCueImg.src = `docs/blue_yellow/${envFile}.png`;
-        envCueImg.style.display = 'block';
-
         biasPicture.src = `${biasFolder}/plot.png`;
         biasSource.src = `${biasFolder}/animation.mp4`;
         document.getElementById('bias-video').load();
         biasDisplay.style.display = 'block';
       }
 
-      // Unity top view image
+      // Unity top view + Env-Cue-Bild festsetzen
       if (showImages) {
         unityImgEl.src = `${folderName}/images_top_view_unity/top_view.png`;
+        envCueImg.src = `docs/blue_yellow/${formattedBiasImg}.png`;
       }
 
-      // Agent images
+      // Agenten-Bilder laden
       if (showImages) {
         const totalAgents = parseInt(agents, 10);
         for (let i = 1; i <= totalAgents; i++) {
