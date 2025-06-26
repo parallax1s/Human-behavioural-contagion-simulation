@@ -66,8 +66,6 @@
       height: 450px;
       object-fit: contain;
     }
-    /* Nur Agent POV-Bilder rahmen */
-    /* #carousel-image-left,*/
     #carousel-image-right {
       border: 1px solid #000;
     }
@@ -78,13 +76,10 @@
       gap: 20px;
       margin-bottom: 20px;
     }
-    /* Nur Unity top_view.png rahmen */
     #unity-image {
       max-width: 50%;
       height: auto;
-      /* border: 1px solid #000; */
     }
-    /* Env-cue Bild kein Rahmen */
     #env-cue-image {
       max-width: 80%;
       height: auto;
@@ -117,6 +112,7 @@
     #bias-display {
       margin-top: 40px;
       text-align: center;
+      display: none;
     }
     .bias-container {
       display: flex;
@@ -151,13 +147,13 @@
   <form id="simulation-form">
     <label for="agents">Number of Agents:
       <select id="agents" name="agents" required>
-        <!-- Options populated from combinations.json -->
+        <!-- populated from combinations.json -->
       </select>
     </label>
 
     <label for="density">Density:
       <select id="density" name="density" required>
-        <!-- Options populated based on selected agent count -->
+        <!-- populated based on agents -->
       </select>
     </label>
 
@@ -166,6 +162,20 @@
         <option value="55/45">55/45</option>
         <option value="75/25">75/25</option>
         <option value="95/05">95/05</option>
+      </select>
+    </label>
+
+    <label for="network-type">Network type:
+      <select id="network-type" name="network-type" required>
+        <option value="visual">visual</option>
+        <option value="metric">metric</option>
+      </select>
+    </label>
+
+    <label for="env-agents">Environment informed Agents:
+      <select id="env-agents" name="env-agents" required>
+        <option value="AllGetEnvSignal">All</option>
+        <option value="firstRowFollowers">Front row</option>
       </select>
     </label>
 
@@ -180,7 +190,6 @@
 
   <div id="notice" class="notice"></div>
 
-  <!-- Neuer VR-Setup Bereich -->
   <div id="vr-setup">
     <h2>VR setup</h2>
     <video id="vr-video" autoplay loop muted>
@@ -194,7 +203,6 @@
     <div id="agent-description" class="description">
       Placeholder description text for agent images.
     </div>
-    <!-- Unity + Env-Cue Ansicht -->
     <div class="unity-image-container">
       <img id="unity-image" src="" alt="Unity Top View" />
       <img id="env-cue-image" src="" alt="Environmental Cue" />
@@ -211,11 +219,11 @@
     <div id="agent-name" class="agent-name"></div>
   </div>
 
-  <div id="bias-display" style="display: none;">
+  <div id="bias-display">
     <h2>Bias Display</h2>
-    <div class="description">Placeholder description text for bias display.</div>
+    <div class="description">Select analysis options above, then Generate.</div>
     <div class="bias-container">
-      <img id="bias-picture" src="" alt="Bias Picture" class="media-item" />
+      <img id="bias-picture" src="" alt="Analysis Plot" class="media-item" />
       <video id="bias-video" autoplay loop muted class="media-item">
         <source id="bias-source" src="" type="video/mp4" />
         Your browser does not support the video tag.
@@ -246,102 +254,100 @@
       const agentsSelect = document.getElementById('agents');
       agentsSelect.innerHTML = '';
       Object.keys(allowedCombinations).forEach(agentCount => {
-        const option = document.createElement('option');
-        option.value = agentCount;
-        option.textContent = agentCount;
-        agentsSelect.appendChild(option);
+        const option = new Option(agentCount, agentCount);
+        agentsSelect.append(option);
       });
       agentsSelect.value = Object.keys(allowedCombinations)[0];
       updateDensityDropdown();
     }
 
     function updateDensityDropdown() {
-      const agentsSelect = document.getElementById('agents');
       const densitySelect = document.getElementById('density');
-      const selectedAgent = agentsSelect.value;
+      const selectedAgent = document.getElementById('agents').value;
       densitySelect.innerHTML = '';
       allowedCombinations[selectedAgent].forEach(density => {
-        const option = document.createElement('option');
-        option.value = density;
-        option.textContent = density;
-        densitySelect.appendChild(option);
+        const option = new Option(density, density);
+        densitySelect.append(option);
       });
     }
 
-    document.getElementById('agents').addEventListener('change', updateDensityDropdown);
+    document.getElementById('agents')
+      .addEventListener('change', updateDensityDropdown);
 
     document.getElementById('simulation-form').addEventListener('submit', function(e) {
       e.preventDefault();
 
-      const showImages = document.getElementById('toggle-images').checked;
+      const showImages     = document.getElementById('toggle-images').checked;
       const showBiasOption = document.getElementById('toggle-bias').checked;
-      const showVR = document.getElementById('toggle-vr').checked;
-      const agents = document.getElementById('agents').value;
-      const density = document.getElementById('density').value;
-      const biasValue = document.getElementById('bias').value;
+      const showVR         = document.getElementById('toggle-vr').checked;
+      const agents         = document.getElementById('agents').value;
+      const density        = document.getElementById('density').value;
+      const biasValue      = document.getElementById('bias').value;             // e.g. "75/25"
+      const networkType    = document.getElementById('network-type').value;     // "visual" or "metric"
+      const envAgents      = document.getElementById('env-agents').value;       // "AllGetEnvSignal" or "firstRowFollowers"
 
-      const notice = document.getElementById('notice');
-      const carousel = document.getElementById('carousel');
-      const biasDisplay = document.getElementById('bias-display');
-      const vrSetup = document.getElementById('vr-setup');
-      const carouselImageLeft = document.getElementById('carousel-image-left');
+      const notice         = document.getElementById('notice');
+      const carousel       = document.getElementById('carousel');
+      const biasDisplay    = document.getElementById('bias-display');
+      const vrSetup        = document.getElementById('vr-setup');
+      const carouselImageLeft  = document.getElementById('carousel-image-left');
       const carouselImageRight = document.getElementById('carousel-image-right');
-      const biasPicture = document.getElementById('bias-picture');
-      const biasSource = document.getElementById('bias-source');
-      const vrSource = document.getElementById('vr-source');
-      const unityImgEl = document.getElementById('unity-image');
-      const envCueImg = document.getElementById('env-cue-image');
-      const agentName = document.getElementById('agent-name');
-      const agentIndexInput = document.getElementById('agent-index-input');
+      const biasPicture    = document.getElementById('bias-picture');
+      const biasSource     = document.getElementById('bias-source');
+      const vrSource       = document.getElementById('vr-source');
+      const unityImgEl     = document.getElementById('unity-image');
+      const envCueImg      = document.getElementById('env-cue-image');
+      const agentName      = document.getElementById('agent-name');
+      const agentIndexInput= document.getElementById('agent-index-input');
 
-      // Reset previous content
+      // Reset previous
       notice.textContent = '';
       carousel.style.display = 'none';
       biasDisplay.style.display = 'none';
       vrSetup.style.display = 'none';
-      carouselImageLeft.src = '';
-      carouselImageRight.src = '';
-      biasPicture.src = '';
-      biasSource.src = '';
-      vrSource.src = '';
-      unityImgEl.src = '';
-      envCueImg.src = '';
+      [carouselImageLeft, carouselImageRight, biasPicture, vrSource, vrSource, unityImgEl, envCueImg].forEach(el => el.src = '');
       document.getElementById('bias-video').load();
       document.getElementById('vr-video').load();
       imagePairs = [];
       currentIndex = 0;
 
+      // Validate density
       if (!allowedCombinations[agents].includes(density)) {
-        notice.textContent = `Invalid density value for ${agents} agents. Allowed values: ${allowedCombinations[agents].join(', ')}.`;
+        notice.textContent = `Invalid density value for ${agents} agents. Allowed: ${allowedCombinations[agents].join(', ')}.`;
         return;
       }
 
-      const folderName = `agents${agents}_dens_${density}`;
-      // formattedBiasImg ohne Slash, z.B. "5545"
-      const formattedBiasImg = biasValue.replace('/', '');
+      const folderName    = `agents${agents}_dens_${density}`;
+      const formattedBias = biasValue.replace('/', '_'); // "75_25"
 
-      // Show VR setup if checked
+      // VR
       if (showVR) {
         vrSource.src = 'https://raw.githubusercontent.com/FabioReeh/Human-behavioural-contagion-simulation/main/docs/full_scene/full_scene.mp4';
         document.getElementById('vr-video').load();
         vrSetup.style.display = 'block';
       }
 
-      // Show bias display if checked
+      // Analysis / bias display
       if (showBiasOption) {
-        biasPicture.src = `${folderName}/blue_yellow_${formattedBiasImg}/plot.png`;
-        biasSource.src = `${folderName}/blue_yellow_${formattedBiasImg}/animation.mp4`;
+        const analysisBase = `${folderName}/blue_yellow_${formattedBias}`;
+        const networkFolder = (networkType === 'metric')
+          ? 'multiPOV_cond1_metric'
+          : 'multiPOV_cond1_visual';
+        const envFolder = envAgents; // matches "AllGetEnvSignal" or "firstRowFollowers"
+
+        biasPicture.src = `${analysisBase}/${networkFolder}/${envFolder}/network_perf_distribution/plot.png`;
+        biasSource.src  = `${analysisBase}/${networkFolder}/${envFolder}/contagion_animations/animation.mp4`;
         document.getElementById('bias-video').load();
         biasDisplay.style.display = 'block';
       }
 
-      // Unity top view + Env-Cue-Bild festsetzen
+      // Scenery images
       if (showImages) {
-        unityImgEl.src = `${folderName}/images_top_view_unity/top_view.png`;
-        envCueImg.src = `blue_yellow/${formattedBiasImg}.png`;
+        unityImgEl.src  = `${folderName}/images_top_view_unity/top_view.png`;
+        envCueImg.src   = `blue_yellow/${formattedBias}.png`;
       }
 
-      // Agenten-Bilder laden
+      // Agent images
       if (showImages) {
         const totalAgents = parseInt(agents, 10);
         for (let i = 1; i <= totalAgents; i++) {
@@ -350,26 +356,25 @@
       }
 
       function loadImagePair(i) {
-        const mainImagePath = `${folderName}/images/agent${i}.png`;
-        const topViewImagePath = `${folderName}/images_top_view/agent${i}.png`;
+        const mainPath    = `${folderName}/images/agent${i}.png`;
+        const topPath     = `${folderName}/images_top_view/agent${i}.png`;
+        let mainLoaded    = false;
+        let topLoaded     = false;
+        const mainImg     = new Image();
+        const topImg      = new Image();
 
-        let mainImg = new Image();
-        let topViewImg = new Image();
-        let mainLoaded = false;
-        let topLoaded = false;
+        mainImg.onload  = () => { mainLoaded = true; checkPair(); };
+        mainImg.onerror = () => { checkPair(); };
+        topImg.onload   = () => { topLoaded = true; checkPair(); };
+        topImg.onerror  = () => { checkPair(); };
 
-        mainImg.onload = () => { mainLoaded = true; checkPair(); };
-        mainImg.onerror = () => { console.error(`Failed to load ${mainImagePath}`); checkPair(); };
-        topViewImg.onload = () => { topLoaded = true; checkPair(); };
-        topViewImg.onerror = () => { console.error(`Failed to load ${topViewImagePath}`); checkPair(); };
-
-        mainImg.src = mainImagePath;
-        topViewImg.src = topViewImagePath;
+        mainImg.src = mainPath;
+        topImg.src  = topPath;
 
         function checkPair() {
-          if ((mainLoaded || mainImg.complete) && (topLoaded || topViewImg.complete)) {
+          if ((mainLoaded || mainImg.complete) && (topLoaded || topImg.complete)) {
             if (mainLoaded && topLoaded) {
-              imagePairs.push({ index: i, mainPath: mainImagePath, topViewPath: topViewImagePath });
+              imagePairs.push({ index: i, mainPath, topPath });
             }
             if (imagePairs.length === parseInt(agents, 10)) {
               finalizePairs();
@@ -392,35 +397,31 @@
       }
     });
 
-    function displayPair(index) {
-      const carouselImageLeft = document.getElementById('carousel-image-left');
-      const carouselImageRight = document.getElementById('carousel-image-right');
-      const agentName = document.getElementById('agent-name');
-      carouselImageLeft.src = imagePairs[index].topViewPath;
-      carouselImageRight.src = imagePairs[index].mainPath;
-      agentName.textContent = 'Agent ' + imagePairs[index].index;
-      currentIndex = index;
+    function displayPair(idx) {
+      const left  = document.getElementById('carousel-image-left');
+      const right = document.getElementById('carousel-image-right');
+      left.src  = imagePairs[idx].topPath;
+      right.src = imagePairs[idx].mainPath;
+      document.getElementById('agent-name').textContent = 'Agent ' + imagePairs[idx].index;
+      currentIndex = idx;
       document.getElementById('carousel').style.display = 'block';
-      document.getElementById('agent-index-input').value = imagePairs[index].index;
+      document.getElementById('agent-index-input').value = imagePairs[idx].index;
     }
 
     function setupAgentControls() {
       const prevBtn = document.getElementById('prev-agent');
       const nextBtn = document.getElementById('next-agent');
-      const agentIndexInput = document.getElementById('agent-index-input');
+      const idxInput = document.getElementById('agent-index-input');
 
       prevBtn.onclick = () => {
-        let newIndex = parseInt(agentIndexInput.value, 10) - 1;
-        if (newIndex >= parseInt(agentIndexInput.min, 10)) displayPair(newIndex - 1);
+        if (currentIndex > 0) displayPair(currentIndex - 1);
       };
       nextBtn.onclick = () => {
-        let newIndex = parseInt(agentIndexInput.value, 10) + 1;
-        if (newIndex <= parseInt(agentIndexInput.max, 10)) displayPair(newIndex - 1);
+        if (currentIndex < imagePairs.length - 1) displayPair(currentIndex + 1);
       };
-      agentIndexInput.onchange = () => {
-        let val = parseInt(agentIndexInput.value, 10);
-        if (val < parseInt(agentIndexInput.min, 10)) val = parseInt(agentIndexInput.min, 10);
-        else if (val > parseInt(agentIndexInput.max, 10)) val = parseInt(agentIndexInput.max, 10);
+      idxInput.onchange = () => {
+        let val = parseInt(idxInput.value, 10);
+        val = Math.max(parseInt(idxInput.min, 10), Math.min(val, parseInt(idxInput.max, 10)));
         displayPair(val - 1);
       };
     }
