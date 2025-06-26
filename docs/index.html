@@ -67,7 +67,7 @@
       object-fit: contain;
     }
     /* Nur Agent POV-Bilder rahmen */
-    /* #carousel-image-left, */
+    #carousel-image-left,
     #carousel-image-right {
       border: 1px solid #000;
     }
@@ -78,9 +78,9 @@
     }
     /* Nur Unity top_view.png rahmen */
     #unity-image {
-      max-width: 60%;
+      max-width: 100%;
       height: auto;
-      /* border: 1px solid #000; */
+      border: 1px solid #000;
     }
     #agent-controls {
       margin: 10px auto;
@@ -123,13 +123,20 @@
       max-width: 100%;
       height: auto;
     }
+    /* Env cue image, kein Rahmen */
+    .env-cue-img {
+      max-width: 300px;
+      height: auto;
+      border: none;
+      margin-bottom: 20px;
+    }
     /* Neuer VR-Setup Bereich */
     #vr-setup {
       display: none;
       margin-bottom: 20px;
     }
     #vr-setup video {
-      max-width: 80%;
+      max-width: 100%;
       height: auto;
     }
   </style>
@@ -156,11 +163,9 @@
 
     <label for="bias">Environmental cue:
       <select id="bias" name="bias" required>
-        <option value="51/49">51/49</option>
-        <option value="60/40">60/40</option>
-        <option value="70/30">70/30</option>
-        <option value="80/20">80/20</option>
-        <option value="90/10">90/10</option>
+        <option value="55/45">55/45</option>
+        <option value="75/25">75/25</option>
+        <option value="95/05">95/05</option>
       </select>
     </label>
 
@@ -175,7 +180,7 @@
 
   <div id="notice" class="notice"></div>
 
-  <!-- Neuer VR-Setup Bereich -->
+  <!-- VR-Setup Bereich -->
   <div id="vr-setup">
     <h2>VR setup</h2>
     <video id="vr-video" autoplay loop muted>
@@ -189,7 +194,7 @@
     <div id="agent-description" class="description">
       Placeholder description text for agent images.
     </div>
-    <!-- Neue Unity-Ansicht -->
+    <!-- Unity top-view -->
     <div class="unity-image-container">
       <img id="unity-image" src="" alt="Unity Top View" />
     </div>
@@ -207,6 +212,8 @@
 
   <div id="bias-display" style="display: none;">
     <h2>Bias Display</h2>
+    <!-- Environmental cue image -->
+    <img id="env-cue-img" class="env-cue-img" src="" alt="Environmental Cue" style="display:none;" />
     <div class="description">Placeholder description text for bias display.</div>
     <div class="bias-container">
       <img id="bias-picture" src="" alt="Bias Picture" class="media-item" />
@@ -284,6 +291,7 @@
       const biasSource = document.getElementById('bias-source');
       const vrSource = document.getElementById('vr-source');
       const unityImgEl = document.getElementById('unity-image');
+      const envCueImg = document.getElementById('env-cue-img');
       const agentName = document.getElementById('agent-name');
       const agentIndexInput = document.getElementById('agent-index-input');
 
@@ -298,6 +306,8 @@
       biasSource.src = '';
       vrSource.src = '';
       unityImgEl.src = '';
+      envCueImg.src = '';
+      envCueImg.style.display = 'none';
       document.getElementById('bias-video').load();
       document.getElementById('vr-video').load();
       imagePairs = [];
@@ -312,7 +322,7 @@
       const formattedBias = biasValue.replace('/', '_');
       const biasFolder = `${folderName}/blue_yellow_${formattedBias}`;
 
-      // Show VR setup if checked, set source and load
+      // Show VR setup if checked
       if (showVR) {
         vrSource.src = 'https://raw.githubusercontent.com/FabioReeh/Human-behavioural-contagion-simulation/main/docs/full_scene/full_scene.mp4';
         document.getElementById('vr-video').load();
@@ -321,6 +331,11 @@
 
       // Show bias display if checked
       if (showBiasOption) {
+        // Env cue image
+        const envFile = biasValue.replace('/', '');
+        envCueImg.src = `docs/blue_yellow/${envFile}.png`;
+        envCueImg.style.display = 'block';
+
         biasPicture.src = `${biasFolder}/plot.png`;
         biasSource.src = `${biasFolder}/animation.mp4`;
         document.getElementById('bias-video').load();
@@ -332,7 +347,7 @@
         unityImgEl.src = `${folderName}/images_top_view_unity/top_view.png`;
       }
 
-      // Agenten-Bilder laden
+      // Agent images
       if (showImages) {
         const totalAgents = parseInt(agents, 10);
         for (let i = 1; i <= totalAgents; i++) {
