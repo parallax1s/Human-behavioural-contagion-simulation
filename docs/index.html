@@ -114,7 +114,18 @@
       color: #555;
       text-align: center;
     }
+    /* Neuer VR-Setup Bereich */
+    #vr-setup {
+      display: none;
+      margin-bottom: 20px;
+    }
+    #vr-setup video {
+      max-width: 100%;
+      height: auto;
+    }
+    /* Neuer Analysis Bereich */
     #bias-display {
+      display: none;
       margin-top: 40px;
       text-align: center;
     }
@@ -127,15 +138,6 @@
     }
     .bias-container img,
     .bias-container video {
-      max-width: 100%;
-      height: auto;
-    }
-    /* Neuer VR-Setup Bereich */
-    #vr-setup {
-      display: none;
-      margin-bottom: 20px;
-    }
-    #vr-setup video {
       max-width: 100%;
       height: auto;
     }
@@ -166,6 +168,20 @@
         <option value="55/45">55/45</option>
         <option value="75/25">75/25</option>
         <option value="95/05">95/05</option>
+      </select>
+    </label>
+
+    <label for="network-type">Network type:
+      <select id="network-type" name="networkType" required>
+        <option value="visual">visual</option>
+        <option value="metric">metric</option>
+      </select>
+    </label>
+
+    <label for="env-agents">Environment informed Agents:
+      <select id="env-agents" name="envAgents" required>
+        <option value="AllGetEnvSignal">All</option>
+        <option value="firstRowFollowers">Front row</option>
       </select>
     </label>
 
@@ -211,11 +227,11 @@
     <div id="agent-name" class="agent-name"></div>
   </div>
 
-  <div id="bias-display" style="display: none;">
-    <h2>Bias Display</h2>
-    <div class="description">Placeholder description text for bias display.</div>
+  <div id="bias-display">
+    <h2>Analysis</h2>
+    <div class="description">Select analysis parameters and view results.</div>
     <div class="bias-container">
-      <img id="bias-picture" src="" alt="Bias Picture" class="media-item" />
+      <img id="bias-picture" src="" alt="Analysis Plot" class="media-item" />
       <video id="bias-video" autoplay loop muted class="media-item">
         <source id="bias-source" src="" type="video/mp4" />
         Your browser does not support the video tag.
@@ -273,13 +289,17 @@
     document.getElementById('simulation-form').addEventListener('submit', function(e) {
       e.preventDefault();
 
+      // Read toggles and selections
       const showImages = document.getElementById('toggle-images').checked;
       const showBiasOption = document.getElementById('toggle-bias').checked;
       const showVR = document.getElementById('toggle-vr').checked;
       const agents = document.getElementById('agents').value;
       const density = document.getElementById('density').value;
       const biasValue = document.getElementById('bias').value;
+      const networkType = document.getElementById('network-type').value;
+      const envAgents = document.getElementById('env-agents').value;
 
+      // Elements
       const notice = document.getElementById('notice');
       const carousel = document.getElementById('carousel');
       const biasDisplay = document.getElementById('bias-display');
@@ -311,14 +331,14 @@
       imagePairs = [];
       currentIndex = 0;
 
+      // Validate density
       if (!allowedCombinations[agents].includes(density)) {
         notice.textContent = `Invalid density value for ${agents} agents. Allowed values: ${allowedCombinations[agents].join(', ')}.`;
         return;
       }
 
       const folderName = `agents${agents}_dens_${density}`;
-      // formattedBiasImg ohne Slash, z.B. "5545"
-      const formattedBiasImg = biasValue.replace('/', '');
+      const formattedBiasImg = biasValue.replace(/\//g, '_');
 
       // Show VR setup if checked
       if (showVR) {
@@ -327,21 +347,22 @@
         vrSetup.style.display = 'block';
       }
 
-      // Show bias display if checked
+      // Show analysis if checked
       if (showBiasOption) {
-        biasPicture.src = `${folderName}/blue_yellow_${formattedBiasImg}/plot.png`;
-        biasSource.src = `${folderName}/blue_yellow_${formattedBiasImg}/animation.mp4`;
+        const analysisFolder = `${folderName}/blue_yellow_${formattedBiasImg}/${networkType === 'metric' ? 'multiPOV_cond1_metric' : 'multiPOV_cond1_visual'}/${envAgents}`;
+        biasPicture.src = `${analysisFolder}/network_perf_distribution/plot.png`;
+        biasSource.src = `${analysisFolder}/contagion_animations/animation.mp4`;
         document.getElementById('bias-video').load();
         biasDisplay.style.display = 'block';
       }
 
-      // Unity top view + Env-Cue-Bild festsetzen
+      // Unity top view + Env-Cue image
       if (showImages) {
         unityImgEl.src = `${folderName}/images_top_view_unity/top_view.png`;
         envCueImg.src = `blue_yellow/${formattedBiasImg}.png`;
       }
 
-      // Agenten-Bilder laden
+      // Agent images loading
       if (showImages) {
         const totalAgents = parseInt(agents, 10);
         for (let i = 1; i <= totalAgents; i++) {
@@ -371,9 +392,7 @@
             if (mainLoaded && topLoaded) {
               imagePairs.push({ index: i, mainPath: mainImagePath, topViewPath: topViewImagePath });
             }
-            if (imagePairs.length === parseInt(agents, 10)) {
-              finalizePairs();
-            }
+            if (imagePairs.length === totalAgents) finalizePairs();
           }
         }
       }
