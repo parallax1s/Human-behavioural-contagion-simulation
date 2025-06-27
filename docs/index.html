@@ -45,7 +45,7 @@
       font-weight: normal;
     }
 
-    form, .carousel, .bias-container {
+    form, .carousel, .bias-container, .analysis-container {
       margin: 0 auto;
     }
 
@@ -116,12 +116,14 @@
       text-align: center;
     }
 
-    #bias-display {
+    #bias-display,
+    #advanced-analysis {
       margin-top: 40px;
       text-align: center;
       display: none;
     }
-    .bias-container {
+    .bias-container,
+    .analysis-container {
       display: flex;
       justify-content: center;
       align-items: center;
@@ -129,7 +131,8 @@
       margin-top: 10px;
     }
     .bias-container img,
-    .bias-container video {
+    .bias-container video,
+    .analysis-container img {
       max-width: 100%;
       height: auto;
     }
@@ -194,6 +197,7 @@
     <label><input type="checkbox" id="toggle-images" checked /> Show scenery</label>
     <label><input type="checkbox" id="toggle-bias" checked /> Show Analysis</label>
     <label><input type="checkbox" id="toggle-vr" checked /> Show VR Setup</label>
+    <label><input type="checkbox" id="toggle-advanced" checked /> Show Advanced Analysis</label>
   </div>
 
   <div id="notice" class="notice"></div>
@@ -212,7 +216,6 @@
       Placeholder description text for agent images.
     </div>
 
-    <!-- New layout: Unity | Agent pair carousel | Environmental cue -->
     <div class="carousel-flex">
       <img id="unity-image" src="" alt="Unity Top View" />
       <div class="image-container">
@@ -239,6 +242,15 @@
         <source id="bias-source" src="" type="video/mp4" />
         Your browser does not support the video tag.
       </video>
+    </div>
+  </div>
+
+  <div id="advanced-analysis">
+    <h2>Advanced Analysis</h2>
+    <div class="description">Additional analysis plots based on your selections.</div>
+    <div class="analysis-container">
+      <img id="state-traj-img" src="" alt="State Trajectory" class="media-item" />
+      <img id="wdegree-img" src="" alt="Weighted Degree Distribution" class="media-item" />
     </div>
   </div>
 
@@ -286,19 +298,25 @@
     document.getElementById('simulation-form').addEventListener('submit', function(e) {
       e.preventDefault();
 
+      // Toggles and selections
       const showImages     = document.getElementById('toggle-images').checked;
       const showBiasOption = document.getElementById('toggle-bias').checked;
       const showVR         = document.getElementById('toggle-vr').checked;
+      const showAdvanced   = document.getElementById('toggle-advanced').checked;
       const agents         = document.getElementById('agents').value;
       const density        = document.getElementById('density').value;
       const biasValue      = document.getElementById('bias').value;             // e.g. "75/25"
       const networkType    = document.getElementById('network-type').value;     // "visual" or "metric"
       const envAgents      = document.getElementById('env-agents').value;       // "AllGetEnvSignal" or "firstRowFollowers"
 
+      // UI elements
       const notice         = document.getElementById('notice');
       const carousel       = document.getElementById('carousel');
       const biasDisplay    = document.getElementById('bias-display');
       const vrSetup        = document.getElementById('vr-setup');
+      const advancedDisplay= document.getElementById('advanced-analysis');
+      const stateImg       = document.getElementById('state-traj-img');
+      const wdegreeImg     = document.getElementById('wdegree-img');
       const carouselImageLeft  = document.getElementById('carousel-image-left');
       const carouselImageRight = document.getElementById('carousel-image-right');
       const biasPicture    = document.getElementById('bias-picture');
@@ -309,12 +327,13 @@
       const agentName      = document.getElementById('agent-name');
       const agentIndexInput= document.getElementById('agent-index-input');
 
-      // Reset previous
+      // Reset previous displays
       notice.textContent = '';
       carousel.style.display = 'none';
       biasDisplay.style.display = 'none';
       vrSetup.style.display = 'none';
-      [carouselImageLeft, carouselImageRight, biasPicture, unityImgEl, envCueImg].forEach(el => el.src = '');
+      advancedDisplay.style.display = 'none';
+      [carouselImageLeft, carouselImageRight, biasPicture, unityImgEl, envCueImg, stateImg, wdegreeImg].forEach(el => el.src = '');
       document.getElementById('bias-video').load();
       document.getElementById('vr-video').load();
       imagePairs = [];
@@ -326,28 +345,41 @@
         return;
       }
 
+      // Build folder and file paths
       const folderName    = `agents${agents}_dens_${density}`;
       const formattedBias = biasValue.replace('/', '_');
+      const networkFolder = (networkType === 'metric')
+        ? 'multiPOV_cond1_metric'
+        : 'multiPOV_cond1_visual';
+      const envFolder     = envAgents; // "AllGetEnvSignal" or "firstRowFollowers"
 
-      // VR
+      // VR setup
       if (showVR) {
         vrSource.src = 'https://raw.githubusercontent.com/FabioReeh/Human-behavioural-contagion-simulation/main/docs/full_scene/full_scene.mp4';
         document.getElementById('vr-video').load();
         vrSetup.style.display = 'block';
       }
 
-      // Analysis / bias display
+      // Bias analysis
       if (showBiasOption) {
         const analysisBase = `${folderName}/blue_yellow_${formattedBias}`;
-        const networkFolder = (networkType === 'metric')
-          ? 'multiPOV_cond1_metric'
-          : 'multiPOV_cond1_visual';
-        const envFolder = envAgents; // matches "AllGetEnvSignal" or "firstRowFollowers"
-
         biasPicture.src = `${analysisBase}/${networkFolder}/${envFolder}/network_perf_distribution/plot.png`;
         biasSource.src  = `${analysisBase}/${networkFolder}/${envFolder}/contagion_animations/animation.mp4`;
         document.getElementById('bias-video').load();
         biasDisplay.style.display = 'block';
+      }
+
+      // Advanced analysis
+      if (showAdvanced) {
+        const advBase = `advanced_analysis/blue_yellow_${formattedBias}/${networkFolder}/${envFolder}`;
+        stateImg.src = `${advBase}/StateTraj.png`;
+        if (envAgents === 'AllGetEnvSignal') {
+          wdegreeImg.src = `${advBase}/Wdegree_distribution.png`;
+          wdegreeImg.style.display = '';
+        } else {
+          wdegreeImg.style.display = 'none';
+        }
+        advancedDisplay.style.display = 'block';
       }
 
       // Scenery images
@@ -364,6 +396,7 @@
         }
       }
 
+      // ... loadImagePair, finalizePairs, displayPair, setupAgentControls remain unchanged ...
       function loadImagePair(i) {
         const mainPath    = `${folderName}/images/agent${i}.png`;
         const topPath     = `${folderName}/images_top_view/agent${i}.png`;
