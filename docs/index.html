@@ -66,7 +66,7 @@
       justify-content: center;
       align-items: center;
       gap: 40px;
-      margin-bottom: 10px;
+      margin-bottom: 20px;
     }
     .carousel-flex img {
       width: 300px;
@@ -149,7 +149,7 @@
       margin-bottom: 20px;
     }
     #vr-setup video {
-      max-width: 10%;
+      max-width: 25%;
       height: auto;
     }
     /* ─── 30% larger advanced‐analysis images ─── */
@@ -173,7 +173,20 @@
     width: calc(750px * 1.2);   /* = 900px */
     height: calc(450px * 1.2);  /* = 540px */
     }
+    /* ─── Enlarge the two agent images in the carousel by 20% ─── */
+    #carousel .media-item {
+    /* original was 750×450 */
+    width: calc(750px * 1.2);   /* = 900px */
+    height: calc(450px * 1.2);  /* = 540px */
+    }
 
+    /* ─── Enlarge the Unity top‐view and environmental cue by 20% ─── */
+    .carousel-flex img#unity-image,
+    .carousel-flex img#env-cue-image {
+    /* original was 300px wide */
+    width: calc(300px * 1.2);  /* = 360px */
+    height: auto;              /* keep aspect ratio */
+    }
     
     }
   </style>
