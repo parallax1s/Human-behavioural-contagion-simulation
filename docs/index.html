@@ -10,6 +10,7 @@
       padding: 20px;
       text-align: center;
     }
+
     /* Settings row: inline form controls */
     #simulation-form {
       display: flex;
@@ -28,6 +29,7 @@
     #simulation-form input[type="submit"] {
       margin: 0 0 20px;
     }
+
     /* Options row: checkboxes */
     .options-row {
       display: flex;
@@ -42,9 +44,11 @@
       gap: 5px;
       font-weight: normal;
     }
+
     form, .carousel, .bias-container {
       margin: 0 auto;
     }
+
     #agent-heading {
       margin-bottom: 5px;
       font-size: 1.8em;
@@ -55,11 +59,25 @@
       font-style: italic;
       color: #555;
     }
+
+    /* New flex wrapper for Unity, agent images, and cue */
+    .carousel-flex {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 40px;
+      margin-bottom: 10px;
+    }
+    .carousel-flex img {
+      width: 300px;
+      height: auto;
+      object-fit: contain;
+    }
+
     .image-container {
       display: flex;
       justify-content: center;
       gap: 40px;
-      margin-bottom: 10px;
     }
     .media-item {
       width: 750px;
@@ -69,21 +87,7 @@
     #carousel-image-right {
       border: 1px solid #000;
     }
-    .unity-image-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 20px;
-      margin-bottom: 20px;
-    }
-    #unity-image {
-      max-width: 50%;
-      height: auto;
-    }
-    #env-cue-image {
-      max-width: 80%;
-      height: auto;
-    }
+
     #agent-controls {
       margin: 10px auto;
       display: flex;
@@ -95,10 +99,12 @@
       width: 60px;
       text-align: center;
     }
+
     .agent-name {
       margin-top: 10px;
       font-weight: bold;
     }
+
     .notice {
       color: red;
       font-weight: bold;
@@ -109,6 +115,7 @@
       color: #555;
       text-align: center;
     }
+
     #bias-display {
       margin-top: 40px;
       text-align: center;
@@ -126,7 +133,8 @@
       max-width: 100%;
       height: auto;
     }
-    /* Neuer VR-Setup Bereich */
+
+    /* VR setup hidden by default */
     #vr-setup {
       display: none;
       margin-bottom: 20px;
@@ -203,14 +211,17 @@
     <div id="agent-description" class="description">
       Placeholder description text for agent images.
     </div>
-    <div class="unity-image-container">
+
+    <!-- New layout: Unity | Agent pair carousel | Environmental cue -->
+    <div class="carousel-flex">
       <img id="unity-image" src="" alt="Unity Top View" />
+      <div class="image-container">
+        <img id="carousel-image-left" src="" alt="Agent Top View" class="media-item" />
+        <img id="carousel-image-right" src="" alt="Agent Main View" class="media-item" />
+      </div>
       <img id="env-cue-image" src="" alt="Environmental Cue" />
     </div>
-    <div class="image-container">
-      <img id="carousel-image-left" src="" alt="Top View" class="media-item" />
-      <img id="carousel-image-right" src="" alt="Main View" class="media-item" />
-    </div>
+
     <div id="agent-controls">
       <button id="prev-agent">&laquo; Previous</button>
       <input type="number" id="agent-index-input" min="1" value="1" />
@@ -254,8 +265,7 @@
       const agentsSelect = document.getElementById('agents');
       agentsSelect.innerHTML = '';
       Object.keys(allowedCombinations).forEach(agentCount => {
-        const option = new Option(agentCount, agentCount);
-        agentsSelect.append(option);
+        agentsSelect.append(new Option(agentCount, agentCount));
       });
       agentsSelect.value = Object.keys(allowedCombinations)[0];
       updateDensityDropdown();
@@ -266,8 +276,7 @@
       const selectedAgent = document.getElementById('agents').value;
       densitySelect.innerHTML = '';
       allowedCombinations[selectedAgent].forEach(density => {
-        const option = new Option(density, density);
-        densitySelect.append(option);
+        densitySelect.append(new Option(density, density));
       });
     }
 
@@ -344,7 +353,7 @@
       // Scenery images
       if (showImages) {
         unityImgEl.src  = `${folderName}/images_top_view_unity/top_view.png`;
-        envCueImg.src   = `blue_yellow/${formattedBias}.png`;  // adjusted path to point into docs/blue_yellow
+        envCueImg.src   = `blue_yellow/${formattedBias}.png`;
       }
 
       // Agent images
