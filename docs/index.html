@@ -10,7 +10,19 @@
       padding: 20px;
       text-align: center;
     }
+    /* Header image under the title */
+    .header-image {
+    margin: 20px auto;       /* space above & below */
+    text-align: center;      /* center it */
+    }
 
+    .header-image img {
+    max-width: 200px;        /* cap its width */
+    width: 100%;             /* responsive */
+    height: auto;            /* maintain aspect ratio */
+    border-radius: 4px;      /* optional rounding */
+    border: 1px solid #ccc;  /* subtle frame */
+    }
     /* Settings row: inline form controls */
     #simulation-form {
       display: flex;
@@ -195,10 +207,22 @@
 </head>
 <body>
   <h1>Behavioral Contagion in Human Groups</h1>
+  <!-- Header portrait below the main title -->
+  <div class="header-image">
+    <img id="head-pic" src="full_scene/head_pic.png" alt="Head Portrait" />
+  </div>
   <div class="description">
-    This tool allows you to simulate different behavioural contagion processes.
-    Select your parameters below to see the results.
-    Behavioural contagion refers to the spread of behaviour among individuals within a group or community, much like a contagious disease.
+    <p>We introduce a simulation of a collective decision-making process within a group of human agents performing a two-alternative choice task in a virtual reality (VR) environment.</p>
+
+    <p>In this simulation, agents make decisions based on two sources of information:</p>
+    <ol>
+      <li>Individual information they receive from their environment</li>
+      <li>Social information they receive from observing the decisions of other agents</li>
+    </ol>
+
+    <p>The simulations are based on a modified Drift Diffusion Model, adapted to incorporate both individual and social components of decision-making.</p>
+
+    <p>The parameters listed below represent the key independent variables and assumptions that influence (or fail to influence) the dynamics of behavioral contagion within the group.</p>
   </div>
 
   <form id="simulation-form">
@@ -418,15 +442,14 @@
       // Advanced analysis
       if (showAdvanced) {
         const advBase = `advanced_analysis/blue_yellow_${formattedBias}/${networkFolder}/${envFolder}`;
-        stateImg.src = `${advBase}/StateTraj.png`;
-        if (envAgents === 'AllGetEnvSignal') {
-          wdegreeImg.src = `${advBase}/Wdegree_distribution.png`;
-          wdegreeImg.style.display = '';
-        } else {
-          wdegreeImg.style.display = 'none';
-        }
+        // load the new file names unconditionally
+        stateImg.src    = `${advBase}/finalState_distribution.png`;
+        wdegreeImg.src  = `${advBase}/RT_NoOutlier_distribution.png`;
+        // make sure both images are visible
+        wdegreeImg.style.display = '';
         advancedDisplay.style.display = 'block';
       }
+
 
       // Scenery images
       if (showImages) {
