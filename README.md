@@ -2,4 +2,3 @@
 
 ## To do before deploying:
 
-- Run : node scripts/generate_combinations.js

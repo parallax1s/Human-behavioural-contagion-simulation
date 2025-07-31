@@ -1,8 +1,10 @@
-
+# macOS system files
+.DS_Store
 docs/.DS_Store
 docs/images/.DS_Store
-.DS_Store
+
+# Local copies
 docs/index Kopie 2.html
-docs/images/.DS_Store
-.DS_Store
-.DS_Store
+
+# Generated files
+docs/combinations.json
