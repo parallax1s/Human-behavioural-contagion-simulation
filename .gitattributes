@@ -1,6 +1,2 @@
 *.mp4 filter=lfs diff=lfs merge=lfs -text
 *.png filter=lfs diff=lfs merge=lfs -text
-
-docs/blue_yellow/*.png -filter -diff -merge -text
-docs/full_scene/*.png -filter -diff -merge -text
-docs/full_scene/*.mp4 -filter -diff -merge -text
