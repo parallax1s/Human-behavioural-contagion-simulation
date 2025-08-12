@@ -213,7 +213,7 @@
   <h1>Behavioral Contagion in Human Groups</h1>
   <!-- Header portrait below the main title -->
   <div class="header-image">
-    <img id="head-pic" src="full_scene/head_pic.png" alt="Head Portrait" />
+    <img id="head-pic" src="https://raw.githubusercontent.com/FabioReeh/Human-behavioural-contagion-simulation/main/docs/full_scene/head_pic.png" alt="Head Portrait" />
   </div>
   <div class="description">
     <p>We introduce a simulation of a collective decision-making process within a group of human agents performing a two-alternative choice task in a virtual reality (VR) environment.</p>
@@ -335,6 +335,7 @@
     let allowedCombinations = {};
     let imagePairs = [];
     let currentIndex = 0;
+    const baseUrl = 'https://raw.githubusercontent.com/FabioReeh/Human-behavioural-contagion-simulation/main/docs/';
 
     // Load combinations.json
     fetch('combinations.json')
@@ -432,7 +433,7 @@
 
       // VR setup
       if (showVR) {
-        vrSource.src = 'https://raw.githubusercontent.com/FabioReeh/Human-behavioural-contagion-simulation/main/docs/full_scene/full_scene.mp4';
+        vrSource.src = baseUrl + 'full_scene/full_scene.mp4';
         document.getElementById('vr-video').load();
         vrSetup.style.display = 'block';
       }
@@ -440,8 +441,8 @@
       // Bias analysis
       if (showBiasOption) {
         const analysisBase = `${folderName}/blue_yellow_${formattedBias}`;
-        biasPicture.src = `${analysisBase}/${networkFolder}/${envFolder}/network_perf_distribution/plot.png`;
-        biasSource.src  = `${analysisBase}/${networkFolder}/${envFolder}/contagion_animations/animation.mp4`;
+        biasPicture.src = `${baseUrl}${analysisBase}/${networkFolder}/${envFolder}/network_perf_distribution/plot.png`;
+        biasSource.src  = `${baseUrl}${analysisBase}/${networkFolder}/${envFolder}/contagion_animations/animation.mp4`;
         document.getElementById('bias-video').load();
         biasDisplay.style.display = 'block';
       }
@@ -450,8 +451,8 @@
       if (showAdvanced) {
         const advBase = `advanced_analysis/blue_yellow_${formattedBias}/${networkFolder}/${envFolder}`;
         // load the new file names unconditionally
-        stateImg.src    = `${advBase}/finalState_distribution.png`;
-        wdegreeImg.src  = `${advBase}/RT_NoOutlier_distribution.png`;
+        stateImg.src    = `${baseUrl}${advBase}/finalState_distribution.png`;
+        wdegreeImg.src  = `${baseUrl}${advBase}/RT_NoOutlier_distribution.png`;
         // make sure both images are visible
         wdegreeImg.style.display = '';
         advancedDisplay.style.display = 'block';
@@ -460,8 +461,8 @@
 
       // Scenery images
       if (showImages) {
-        unityImgEl.src  = `${folderName}/images_top_view_unity/top_view.png`;
-        envCueImg.src   = `blue_yellow/${formattedBias}.png`;
+        unityImgEl.src  = `${baseUrl}${folderName}/images_top_view_unity/top_view.png`;
+        envCueImg.src   = `${baseUrl}blue_yellow/${formattedBias}.png`;
       }
 
       // Agent images
@@ -473,8 +474,8 @@
       }
 
       function loadImagePair(i) {
-        const mainPath    = `${folderName}/images/agent${i}.png`;
-        const topPath     = `${folderName}/images_top_view/agent${i}.png`;
+        const mainPath    = `${baseUrl}${folderName}/images/agent${i}.png`;
+        const topPath     = `${baseUrl}${folderName}/images_top_view/agent${i}.png`;
         let mainLoaded    = false;
         let topLoaded     = false;
         const mainImg     = new Image();
