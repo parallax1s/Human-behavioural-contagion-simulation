@@ -5,29 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Agent Simulation</title>
   <style>
-    html {
-    /* increase all fonts by x%: */
-    font-size: 150%;
-    }
     body {
       font-family: Arial, sans-serif;
       padding: 20px;
+      margin: 0 auto;
+      max-width: 1200px;
       text-align: center;
     }
-    /* Header image under the title */
-    .header-image {
-    margin: 20px auto;       /* space above & below */
-    text-align: center;      /* center it */
-    }
-
     .header-image img {
-    max-width: 1250px;        /* cap its width */
-    width: 100%;             /* responsive */
-    height: auto;            /* maintain aspect ratio */
-    border-radius: 4px;      /* optional rounding */
-    border: 1px solid #ccc;  /* subtle frame */
+      width: 100%;
+      height: auto;
+      border-radius: 4px;
+      border: 1px solid #ccc;
     }
-    /* Settings row: inline form controls */
     #simulation-form {
       display: flex;
       flex-wrap: wrap;
@@ -45,12 +35,10 @@
     #simulation-form input[type="submit"] {
       margin: 0 0 20px;
     }
-
-    /* Options row: checkboxes */
     .options-row {
       display: flex;
       justify-content: center;
-      align-items: center;
+      flex-wrap: wrap;
       gap: 30px;
       margin-bottom: 20px;
     }
@@ -60,11 +48,6 @@
       gap: 10px;
       font-weight: normal;
     }
-
-    form, .carousel, .bias-container, .analysis-container {
-      margin: 0 auto;
-    }
-
     #agent-heading {
       margin-bottom: 5px;
       font-size: 1.8em;
@@ -75,35 +58,35 @@
       font-style: italic;
       color: #555;
     }
-
-    /* New flex wrapper for Unity, agent images, and cue */
     .carousel-flex {
       display: flex;
+      flex-wrap: wrap;
       justify-content: center;
       align-items: center;
       gap: 20px;
       margin-bottom: 20px;
     }
-    .carousel-flex img {
-      width: 300px;
+    .carousel-flex img,
+    .image-container img,
+    .bias-container img,
+    .bias-container video,
+    .analysis-container img,
+    #vr-setup video {
+      max-width: 100%;
       height: auto;
-      object-fit: contain;
     }
-
     .image-container {
       display: flex;
-      justify-content: center;
+      flex-direction: column;
       gap: 20px;
     }
     .media-item {
-      width: 750px;
-      height: 450px;
-      object-fit: contain;
+      width: 100%;
+      max-width: 600px;
     }
     #carousel-image-right {
       border: 1px solid #000;
     }
-
     #agent-controls {
       margin: 10px auto;
       display: flex;
@@ -115,12 +98,10 @@
       width: 60px;
       text-align: center;
     }
-
     .agent-name {
       margin-top: 10px;
       font-weight: bold;
     }
-
     .notice {
       color: red;
       font-weight: bold;
@@ -131,7 +112,6 @@
       color: #555;
       text-align: center;
     }
-
     #bias-display,
     #advanced-analysis {
       margin-top: 40px;
@@ -140,6 +120,7 @@
     }
     .bias-container {
       display: flex;
+      flex-wrap: wrap;
       justify-content: center;
       align-items: center;
       gap: 20px;
@@ -152,184 +133,135 @@
       gap: 20px;
       margin-top: 10px;
     }
-    .bias-container img,
-    .bias-container video,
-    .analysis-container img {
-      max-width: 100%;
-      height: auto;
-    }
-
-    /* VR setup hidden by default */
     #vr-setup {
       display: none;
       margin-bottom: 20px;
     }
-    #vr-setup video {
-      max-width: 80%;
-      height: auto;
-    }
-    /* ─── 30% larger advanced‐analysis images ─── */
-    #advanced-analysis .media-item {
-    /* original was 750×450 */
-    width: calc(750px * 2);   /* = 975px */
-    height: calc(450px * 2);  /* = 585px */
-    }
-
-    /* ─── In the bias‐display row:
-       shrink the bias picture by 40%,
-       enlarge the other media (video) by 20% ─── */
-    #bias-display #bias-picture {
-    /* original was 750×450 */
-    width: calc(750px * 1.4);   /* = 450px */
-    height: calc(450px * 1.4);  /* = 270px */
-    }
-
-    #bias-display video {
-    /* original was 750×450 */
-    width: calc(750px * 1.5);   /* = 900px */
-    height: calc(450px * 1.5);  /* = 540px */
-    }
-    /* ─── Enlarge the two agent images in the carousel by 20% ─── */
-    #carousel .media-item {
-    /* original was 750×450 */
-    width: calc(750px * 1.0);   /* = 900px */
-    height: calc(450px * 1.0);  /* = 540px */
-    }
-
-    /* ─── Enlarge the Unity top‐view and environmental cue by 20% ─── */
-    /* .carousel-flex img#unity-image,  */
-    /* .carousel-flex img#env-cue-image {  */
-    /* original was 300px wide */
-    .carousel-flex img#unity-image {
-    width: calc(300px * 2.5);  /* = 360px */
-    height: auto;              /* keep aspect ratio */
-    border: 1px solid #000;
-    }
-    
-    }
   </style>
 </head>
 <body>
-  <h1>Behavioral Contagion in Human Groups</h1>
-  <!-- Header portrait below the main title -->
-  <div class="header-image">
-    <img id="head-pic" src="full_scene/head_pic.png" alt="Head Portrait" />
-  </div>
-  <div class="description">
-    <p>We introduce a simulation of a collective decision-making process within a group of human agents performing a two-alternative choice task in a virtual reality (VR) environment.</p>
-
-    
-    <p>In this simulation, agents make decisions based on two sources of information:</p>
-    <ol>
-      <li>Individual information they receive from their environment</li>
-      <li>Social information they receive from observing the decisions of other agents</li>
-    </ol>
-
-    
-    <p>The simulations are based on a modified Drift Diffusion Model, adapted to incorporate both individual and social components of decision-making.</p>
-
-    <p>The parameters listed below represent the key independent variables and assumptions that influence (or fail to influence) the dynamics of behavioral contagion within the group.</p>
-    
-  </div>
-
-  <form id="simulation-form">
-    <label for="agents">Number of Agents:
-      <select id="agents" name="agents" required>
-        <!-- populated from combinations.json -->
-      </select>
-    </label>
-
-    <label for="density">Density:
-      <select id="density" name="density" required>
-        <!-- populated based on agents -->
-      </select>
-    </label>
-
-    <label for="bias">Environmental cue:
-      <select id="bias" name="bias" required>
-        <option value="55/45">55/45</option>
-        <option value="75/25">75/25</option>
-        <option value="95/05">95/05</option>
-      </select>
-    </label>
-
-    <label for="network-type">Network type:
-      <select id="network-type" name="network-type" required>
-        <option value="visual">visual</option>
-        <option value="metric">metric</option>
-      </select>
-    </label>
-
-    <label for="env-agents">Environment informed Agents:
-      <select id="env-agents" name="env-agents" required>
-        <option value="AllGetEnvSignal">All</option>
-        <option value="firstRowFollowers">Front row</option>
-      </select>
-    </label>
-
-    <input type="submit" value="Generate" />
-  </form>
-
-  <div class="options-row">
-    <label><input type="checkbox" id="toggle-images" checked /> Show scenery</label>
-    <label><input type="checkbox" id="toggle-bias" checked /> Show Analysis</label>
-    <label><input type="checkbox" id="toggle-vr" checked /> Show VR Setup</label>
-    <label><input type="checkbox" id="toggle-advanced" checked /> Show Advanced Analysis</label>
-  </div>
-
-  <div id="notice" class="notice"></div>
-
-  <div id="vr-setup">
-    <h2>VR setup</h2>
-    <video id="vr-video" autoplay loop muted>
-      <source id="vr-source" src="" type="video/mp4" />
-      Your browser does not support the video tag.
-    </video>
-  </div>
-
-  <div class="carousel" id="carousel" style="display: none;">
-    <div id="agent-heading">Agent Images</div>
-    <div id="agent-description" class="description">
-      From left to the right: Top view of unity scene / Visualization of whos FOV is shown / FOV of selected agent / enviromental cue.
+  <header>
+    <h1>Behavioral Contagion in Human Groups</h1>
+    <div class="header-image">
+      <img id="head-pic" src="full_scene/head_pic.png" alt="Head Portrait" />
     </div>
+    <div class="description">
+      <p>We introduce a simulation of a collective decision-making process within a group of human agents performing a two-alternative choice task in a virtual reality (VR) environment.</p>
 
-    <div class="carousel-flex">
-      <img id="unity-image" src="" alt="Unity Top View" />
-      <div class="image-container">
-        <img id="carousel-image-left" src="" alt="Agent Top View" class="media-item" />
-        <img id="carousel-image-right" src="" alt="Agent Main View" class="media-item" />
+      <p>In this simulation, agents make decisions based on two sources of information:</p>
+      <ol>
+        <li>Individual information they receive from their environment</li>
+        <li>Social information they receive from observing the decisions of other agents</li>
+      </ol>
+
+      <p>The simulations are based on a modified Drift Diffusion Model, adapted to incorporate both individual and social components of decision-making.</p>
+
+      <p>The parameters listed below represent the key independent variables and assumptions that influence (or fail to influence) the dynamics of behavioral contagion within the group.</p>
+    </div>
+  </header>
+
+  <main>
+    <section id="controls">
+      <form id="simulation-form">
+        <label for="agents">Number of Agents:
+          <select id="agents" name="agents" required>
+            <!-- populated from combinations.json -->
+          </select>
+        </label>
+
+        <label for="density">Density:
+          <select id="density" name="density" required>
+            <!-- populated based on agents -->
+          </select>
+        </label>
+
+        <label for="bias">Environmental cue:
+          <select id="bias" name="bias" required>
+            <option value="55/45">55/45</option>
+            <option value="75/25">75/25</option>
+            <option value="95/05">95/05</option>
+          </select>
+        </label>
+
+        <label for="network-type">Network type:
+          <select id="network-type" name="network-type" required>
+            <option value="visual">visual</option>
+            <option value="metric">metric</option>
+          </select>
+        </label>
+
+        <label for="env-agents">Environment informed Agents:
+          <select id="env-agents" name="env-agents" required>
+            <option value="AllGetEnvSignal">All</option>
+            <option value="firstRowFollowers">Front row</option>
+          </select>
+        </label>
+
+        <input type="submit" value="Generate" />
+      </form>
+
+      <div class="options-row">
+        <label><input type="checkbox" id="toggle-images" checked /> Show scenery</label>
+        <label><input type="checkbox" id="toggle-bias" checked /> Show Analysis</label>
+        <label><input type="checkbox" id="toggle-vr" checked /> Show VR Setup</label>
+        <label><input type="checkbox" id="toggle-advanced" checked /> Show Advanced Analysis</label>
       </div>
-      <img id="env-cue-image" src="" alt="Environmental Cue" />
-    </div>
+    </section>
 
-    <div id="agent-controls">
-      <button id="prev-agent">&laquo; Previous</button>
-      <input type="number" id="agent-index-input" min="1" value="1" />
-      <button id="next-agent">Next &raquo;</button>
-    </div>
-    <div id="agent-name" class="agent-name"></div>
-  </div>
+    <div id="notice" class="notice"></div>
 
-  <div id="bias-display">
-    <h2>Bias Display</h2>
-    <div class="description">Contagion dynamics and decision trajectories.</div>
-    <div class="bias-container">
-      <img id="bias-picture" src="" alt="Analysis Plot" class="media-item" />
-      <video id="bias-video" autoplay loop muted class="media-item">
-        <source id="bias-source" src="" type="video/mp4" />
+    <section id="vr-setup">
+      <h2>VR setup</h2>
+      <video id="vr-video" autoplay loop muted>
+        <source id="vr-source" src="" type="video/mp4" />
         Your browser does not support the video tag.
       </video>
-    </div>
-  </div>
+    </section>
 
-  <div id="advanced-analysis">
-    <h2>Advanced Analysis</h2>
-    <div class="description">Additional analysis plots based on your selections.</div>
-    <div class="analysis-container">
-      <img id="state-traj-img" src="" alt="State Trajectory" class="media-item" />
-      <img id="wdegree-img" src="" alt="Weighted Degree Distribution" class="media-item" />
-    </div>
-  </div>
+    <section class="carousel" id="carousel" style="display: none;">
+      <div id="agent-heading">Agent Images</div>
+      <div id="agent-description" class="description">
+        From left to the right: Top view of unity scene / Visualization of whos FOV is shown / FOV of selected agent / environmental cue.
+      </div>
+
+      <div class="carousel-flex">
+        <img id="unity-image" src="" alt="Unity Top View" />
+        <div class="image-container">
+          <img id="carousel-image-left" src="" alt="Agent Top View" class="media-item" />
+          <img id="carousel-image-right" src="" alt="Agent Main View" class="media-item" />
+        </div>
+        <img id="env-cue-image" src="" alt="Environmental Cue" />
+      </div>
+
+      <div id="agent-controls">
+        <button id="prev-agent">&laquo; Previous</button>
+        <input type="number" id="agent-index-input" min="1" value="1" />
+        <button id="next-agent">Next &raquo;</button>
+      </div>
+      <div id="agent-name" class="agent-name"></div>
+    </section>
+
+    <section id="bias-display">
+      <h2>Bias Display</h2>
+      <div class="description">Contagion dynamics and decision trajectories.</div>
+      <div class="bias-container">
+        <img id="bias-picture" src="" alt="Analysis Plot" class="media-item" />
+        <video id="bias-video" autoplay loop muted class="media-item">
+          <source id="bias-source" src="" type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+      </div>
+    </section>
+
+    <section id="advanced-analysis">
+      <h2>Advanced Analysis</h2>
+      <div class="description">Additional analysis plots based on your selections.</div>
+      <div class="analysis-container">
+        <img id="state-traj-img" src="" alt="State Trajectory" class="media-item" />
+        <img id="wdegree-img" src="" alt="Weighted Degree Distribution" class="media-item" />
+      </div>
+    </section>
+  </main>
 
   <script>
     let allowedCombinations = {};
@@ -545,3 +477,4 @@
   </script>
 </body>
 </html>
+
