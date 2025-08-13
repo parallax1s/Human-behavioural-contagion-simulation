@@ -80,28 +80,47 @@ section {
 /* Carousel and media layout */
 .carousel-flex {
   display: flex;
-  flex-wrap: wrap;
   justify-content: center;
+  align-items: stretch;
   gap: 20px;
-}
-.carousel-flex > * {
-  flex: 1 1 250px;
 }
 
-.image-container {
+.left-images {
+  width: 40%;
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
+  flex-direction: column;
   gap: 20px;
+}
+
+.left-images img {
+  width: 100%;
+  height: auto;
+}
+
+.right-images {
+  width: 60%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#main-view-image {
+  width: 100%;
+  height: auto;
+}
+
+#env-cue-image {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20%;
 }
 
 .media-item {
   width: 100%;
   height: auto;
-}
-
-.image-container .media-item {
-  flex: 1 1 300px;
 }
 
 #agent-controls {
