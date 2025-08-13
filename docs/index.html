@@ -90,18 +90,20 @@
   </section>
 
   <section class="carousel" id="carousel" style="display: none;">
-    <div id="agent-heading">Agent Images</div>
+    <h2 id="agent-heading">Agent Pictures</h2>
     <div id="agent-description" class="description">
-      From left to the right: Top view of unity scene / Visualization of whos FOV is shown / FOV of selected agent / enviromental cue.
+      Left column: Unity top view above agent top view. Right: main view of the selected agent with the environmental cue centered above it.
     </div>
 
     <div class="carousel-flex">
-      <img id="unity-image" src="" alt="Unity Top View" />
-      <div class="image-container">
-        <img id="carousel-image-left" src="" alt="Agent Top View" class="media-item" />
-        <img id="carousel-image-right" src="" alt="Agent Main View" class="media-item" />
+      <div class="left-images">
+        <img id="unity-image" src="" alt="Unity Top View" />
+        <img id="top-view-image" src="" alt="Agent Top View" />
       </div>
-      <img id="env-cue-image" src="" alt="Environmental Cue" />
+      <div class="right-images">
+        <img id="main-view-image" src="" alt="Agent Main View" />
+        <img id="env-cue-image" src="" alt="Environmental Cue" />
+      </div>
     </div>
 
     <div id="agent-controls">
@@ -199,8 +201,8 @@
       const advancedDisplay= document.getElementById('advanced-analysis');
       const stateImg       = document.getElementById('state-traj-img');
       const wdegreeImg     = document.getElementById('wdegree-img');
-      const carouselImageLeft  = document.getElementById('carousel-image-left');
-      const carouselImageRight = document.getElementById('carousel-image-right');
+      const topViewImgEl   = document.getElementById('top-view-image');
+      const mainViewImgEl  = document.getElementById('main-view-image');
       const biasPicture    = document.getElementById('bias-picture');
       const biasSource     = document.getElementById('bias-source');
       const vrSource       = document.getElementById('vr-source');
@@ -215,7 +217,7 @@
       biasDisplay.style.display = 'none';
       vrSetup.style.display = 'none';
       advancedDisplay.style.display = 'none';
-      [carouselImageLeft, carouselImageRight, biasPicture, unityImgEl, envCueImg, stateImg, wdegreeImg].forEach(el => el.src = '');
+      [topViewImgEl, mainViewImgEl, biasPicture, unityImgEl, envCueImg, stateImg, wdegreeImg].forEach(el => el.src = '');
       document.getElementById('bias-video').load();
       document.getElementById('vr-video').load();
       imagePairs = [];
@@ -320,8 +322,8 @@
     });
 
     function displayPair(idx) {
-      const left  = document.getElementById('carousel-image-left');
-      const right = document.getElementById('carousel-image-right');
+      const left  = document.getElementById('top-view-image');
+      const right = document.getElementById('main-view-image');
       left.src  = imagePairs[idx].topPath;
       right.src = imagePairs[idx].mainPath;
       document.getElementById('agent-name').textContent = 'Agent ' + imagePairs[idx].index;
