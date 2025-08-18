@@ -2,9 +2,3 @@
 .DS_Store
 docs/.DS_Store
 docs/images/.DS_Store
-
-# Local copies
-docs/index Kopie 2.html
-
-# Generated files
-docs/combinations.json
