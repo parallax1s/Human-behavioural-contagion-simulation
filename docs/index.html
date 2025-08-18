@@ -97,12 +97,12 @@
 
     <div class="carousel-flex">
       <div class="left-images">
-        <img id="unity-image" src="" alt="Unity Top View" />
-        <img id="top-view-image" src="" alt="Agent Top View" />
+        <img id="unity-image" src="" alt="Unity Top View" width="1000" height="1000" />
+        <img id="top-view-image" src="" alt="Agent Top View" width="1000" height="1000" />
       </div>
       <div class="right-images">
-        <img id="main-view-image" src="" alt="Agent Main View" />
-        <img id="env-cue-image" src="" alt="Environmental Cue" />
+        <img id="main-view-image" src="" alt="Agent Main View" width="1000" height="563" />
+        <img id="env-cue-image" src="" alt="Environmental Cue" width="200" height="200" />
       </div>
     </div>
 
@@ -267,57 +267,34 @@
 
       // Scenery images
       if (showImages) {
-        unityImgEl.src  = `${baseUrl}${folderName}/images_top_view_unity/top_view.png`;
-        envCueImg.src   = `${baseUrl}blue_yellow/${formattedBias}.png`;
+        unityImgEl.src = `${baseUrl}${folderName}/images_top_view_unity/top_view.png`;
+        envCueImg.src  = `${baseUrl}blue_yellow/${formattedBias}.png`;
       }
 
       // Agent images
       if (showImages) {
         const totalAgents = parseInt(agents, 10);
         for (let i = 1; i <= totalAgents; i++) {
-          loadImagePair(i);
-        }
-      }
-
-      function loadImagePair(i) {
-        const mainPath    = `${baseUrl}${folderName}/images/agent${i}.png`;
-        const topPath     = `${baseUrl}${folderName}/images_top_view/agent${i}.png`;
-        let mainLoaded    = false;
-        let topLoaded     = false;
-        const mainImg     = new Image();
-        const topImg      = new Image();
-
-        mainImg.onload  = () => { mainLoaded = true; checkPair(); };
-        mainImg.onerror = () => { checkPair(); };
-        topImg.onload   = () => { topLoaded = true; checkPair(); };
-        topImg.onerror  = () => { checkPair(); };
-
-        mainImg.src = mainPath;
-        topImg.src  = topPath;
-
-        function checkPair() {
-          if ((mainLoaded || mainImg.complete) && (topLoaded || topImg.complete)) {
-            if (mainLoaded && topLoaded) {
-              imagePairs.push({ index: i, mainPath, topPath });
-            }
-            if (imagePairs.length === parseInt(agents, 10)) {
-              finalizePairs();
-            }
-          }
-        }
-      }
-
-      function finalizePairs() {
-        imagePairs.sort((a, b) => a.index - b.index);
-        if (imagePairs.length === 0) {
-          notice.textContent = 'No images found for the selected combination.';
-          return;
+          const mainPath = `${baseUrl}${folderName}/images/agent${i}.png`;
+          const topPath  = `${baseUrl}${folderName}/images_top_view/agent${i}.png`;
+          imagePairs.push({ index: i, mainPath, topPath, preloaded: false });
         }
         agentIndexInput.min = 1;
         agentIndexInput.max = imagePairs.length;
         agentIndexInput.value = 1;
         displayPair(0);
         setupAgentControls();
+      }
+
+      function preloadPair(idx) {
+        if (idx >= imagePairs.length) return;
+        const pair = imagePairs[idx];
+        if (pair.preloaded) return;
+        const img1 = new Image();
+        const img2 = new Image();
+        img1.src = pair.mainPath;
+        img2.src = pair.topPath;
+        pair.preloaded = true;
       }
     });
 
@@ -330,6 +307,7 @@
       currentIndex = idx;
       document.getElementById('carousel').style.display = 'block';
       document.getElementById('agent-index-input').value = imagePairs[idx].index;
+      preloadPair(idx + 1);
     }
 
     function setupAgentControls() {
