@@ -285,18 +285,18 @@
         displayPair(0);
         setupAgentControls();
       }
-
-      function preloadPair(idx) {
-        if (idx >= imagePairs.length) return;
-        const pair = imagePairs[idx];
-        if (pair.preloaded) return;
-        const img1 = new Image();
-        const img2 = new Image();
-        img1.src = pair.mainPath;
-        img2.src = pair.topPath;
-        pair.preloaded = true;
-      }
     });
+
+    function preloadPair(idx) {
+      if (idx >= imagePairs.length) return;
+      const pair = imagePairs[idx];
+      if (pair.preloaded) return;
+      const img1 = new Image();
+      const img2 = new Image();
+      img1.src = pair.mainPath;
+      img2.src = pair.topPath;
+      pair.preloaded = true;
+    }
 
     function displayPair(idx) {
       const left  = document.getElementById('top-view-image');
